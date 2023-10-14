@@ -53,8 +53,14 @@
 ## <h2 id="dsthanhvien">Các thành viên tham gia project</h2>
  
 | STT| Họ tên                  | MSSV     |     Nhiệm vụ     |   Đánh giá % |
-|:--:|-------------------      |----------|------------------|--------------|
+|:--:|-------------------------|----------|------------------|--------------|
 | 1  | Trần Minh Quân          | 21520414 |                  |              |
+| 2  | Bùi Quốc Huy            | 21520911 |                  |              |
+| 3  | Lê Thuận Hiếu           | 21522072 |                  |              |
+| 4  | Lê Văn Tuấn             | 21522751 |                  |              |
+
+
+
 
 
 ### Nhiệm vụ, đánh giá và công việc cụ thể sẽ được thêm vào và đánh giá sau khi dự án hoàn thành
