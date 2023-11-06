@@ -21,17 +21,6 @@
             android:name=".login"
             android:exported="false" />
         <activity
-            android:name=".ui.theme.Login"
-            android:exported="false" />
-        <activity
-            android:name=".Login"
-            android:exported="false"
-            android:label="@string/title_activity_login"
-            android:theme="@style/Theme.MyApplication" />
-        <activity
-            android:name=".PokemonActivity"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
