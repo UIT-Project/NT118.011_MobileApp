@@ -29,26 +29,33 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //Khởi tạo act
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Kết nối giao diện
         logout=findViewById(R.id.b_logout);
         tv_username=findViewById(R.id.tv_username);
 
-        firebaseAuth=FirebaseAuth.getInstance();
+        //Kết nối FB Realtime DB
         firebaseDatabase=FirebaseDatabase.getInstance(
                 "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
         mDB=firebaseDatabase.getReference();
+
+        //FB Auth
+        firebaseAuth=FirebaseAuth.getInstance();
+
+        //Nhận người dùng hiện tại đăng nhập
         user=firebaseAuth.getCurrentUser();
 
-        mDB.child("users").child("a").setValue("b");
-
+        //Không có người dùng thì đăng nhập
         if(user==null){
             Intent intent=new Intent(getApplicationContext(), login.class);
             startActivity(intent);
             finish();
         }
 
+        //Lấy username từ FB RDB
         try{
         mDB.child("users").child(String.valueOf(user.getEmail())).get()
                 .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
@@ -63,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });} catch (Exception e){}
+
+        //Đăng xuất
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

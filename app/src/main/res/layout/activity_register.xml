@@ -155,6 +155,7 @@
         android:layout_marginTop="50dp"
         android:text="Đăng ký"
         android:textSize="25dp"
+        android:backgroundTint="#A04A0F"
         />
     <TextView
         android:id="@+id/tv_register_3"
@@ -180,4 +181,5 @@
         android:textColor="#A04A0F"
         android:textStyle="bold"
         />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
