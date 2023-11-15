@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".register">
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/pb_register"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tv_register_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="ĐĂNG KÝ"
+        android:textStyle="bold"
+        android:textSize="40dp"
+        />
+    <TextView
+        android:id="@+id/tv_register_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_1"
+        android:text="Cùng SUrPic đăng ký nha!"
+        android:textSize="20dp"
+        android:textAlignment="center"
+        android:textColor="#A4A5B4"
+        />
+    <TextView
+        android:id="@+id/tv_register_username"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_2"
+        android:text="Tên tài Khoản"
+        android:textSize="25dp"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        />
+    <EditText
+        android:id="@+id/et_register_username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tv_register_username"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_username"
+        android:layout_marginLeft="20dp"
+        android:hint="Nhập tên tài khoản"
+        />
+
+    <TextView
+        android:id="@+id/tv_register_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_register_username"
+        android:text="Email"
+        android:textSize="25dp"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        />
+    <EditText
+        android:id="@+id/et_register_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tv_register_email"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_email"
+        android:layout_marginLeft="20dp"
+        android:hint="123@gm.com"
+        />
+
+    <TextView
+        android:id="@+id/tv_register_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_register_email"
+        android:text="Mật khẩu"
+        android:textSize="25dp"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        />
+    <EditText
+        android:id="@+id/et_register_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tv_register_password"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_password"
+        app:layout_constraintEnd_toStartOf="@id/iv_register_password"
+        android:layout_marginLeft="20dp"
+        android:hint="Nhập mật khẩu ít nhất 6 ký tự"
+        android:password="true"
+        />
+    <ImageView
+        android:id="@+id/iv_register_password"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/eye_close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_password" />
+
+    <TextView
+        android:id="@+id/tv_register_repassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_register_password"
+        android:text="Xác nhận mật khẩu"
+        android:textSize="25dp"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        />
+    <EditText
+        android:id="@+id/et_register_repassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tv_register_repassword"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_repassword"
+        android:layout_marginLeft="20dp"
+        android:hint="Nhập lại mật khẩu"
+        android:password="true"
+        />
+    <ImageView
+        android:id="@+id/iv_register_repassword"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/eye_close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_register_repassword" />
+
+    <Button
+        android:id="@+id/b_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_register_repassword"
+        android:layout_marginTop="50dp"
+        android:text="Đăng ký"
+        android:textSize="25dp"
+        android:backgroundTint="#A04A0F"
+        />
+    <TextView
+        android:id="@+id/tv_register_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Đã có tài khoản?"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/b_register"
+        android:textSize="20dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginTop="20dp"
+        />
+    <TextView
+        android:id="@+id/tv_register_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Đăng nhập ngay"
+        app:layout_constraintStart_toEndOf="@id/tv_register_3"
+        app:layout_constraintTop_toBottomOf="@id/b_register"
+        android:textSize="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="20dp"
+        android:textColor="#A04A0F"
+        android:textStyle="bold"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

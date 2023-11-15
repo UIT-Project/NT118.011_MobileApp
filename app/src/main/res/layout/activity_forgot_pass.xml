@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".forgotPass">
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/pb_forgotPass"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <TextView
+        android:id="@+id/tv_forgotPass_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quên mật khẩu"
+        android:textSize="40dp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        android:id="@+id/tv_forgotPass_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_1"
+        android:text="Quên mật khẩu thì đặt lại thôi!"
+        android:textSize="20dp"
+        android:textAlignment="center"
+        android:textColor="#A4A5B4"
+        />
+    <TextView
+        android:id="@+id/tv_forgotPass_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_2"
+        android:text="Email"
+        android:textSize="25dp"
+        android:textStyle="bold"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        />
+    <EditText
+        android:id="@+id/et_forgotPass_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tv_forgotPass_email"
+        app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_email"
+        android:layout_marginLeft="20dp"
+        android:hint="Nhập email đã đăng ký"
+        />
+
+    <Button
+        android:id="@+id/b_resetPass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_forgotPass_email"
+        android:layout_marginTop="50dp"
+        android:text="Gửi mail đặt lại \nmật khẩu"
+        android:textSize="25dp"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#A04A0F"
+        />
+    <TextView
+        android:id="@+id/tv_forgotPass_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nhớ lại được mật khẩu/Có mật khẩu mới?"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/b_resetPass"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textSize="20dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginTop="50dp"
+        />
+    <TextView
+        android:id="@+id/tv_forgotPass_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Đăng nhập"
+        app:layout_constraintStart_toStartOf="@id/tv_forgotPass_3"
+        app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_3"
+        app:layout_constraintEnd_toEndOf="@id/tv_forgotPass_3"
+        android:textSize="20dp"
+        android:layout_marginLeft="10dp"
+        android:textColor="#A04A0F"
+        android:textStyle="bold"
+        />
+</androidx.constraintlayout.widget.ConstraintLayout>

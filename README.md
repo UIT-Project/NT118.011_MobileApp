@@ -8,7 +8,7 @@
   </a>
 
   <p align="center">
-    TÊN SẢN PHẨM
+    SUrPic - Share yoUr Pictures
     <br />
     <a href="https://github.com/shenkedokato/NT118.011_MobileApp"><strong>Khám phá »</strong></a>
     <br />

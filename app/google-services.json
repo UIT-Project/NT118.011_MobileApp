@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "474580974242",
+    "project_id": "surpic-324b6",
+    "storage_bucket": "surpic-324b6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:474580974242:android:22063875a0915db79375fb",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoXmVV-ta7TL4RuK7C_leRQFRWlh0FiIM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
