@@ -114,11 +114,11 @@ public class login extends AppCompatActivity {
         seePass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(et_pass.getInputType()==InputType.TYPE_TEXT_VARIATION_NORMAL){
+                if(et_pass.getInputType()==131073){ //id của normal text
                     et_pass.setInputType(129); //id của textPassword
                     seePass.setImageResource(R.drawable.eye_close);
                 }else {
-                    et_pass.setInputType(InputType.TYPE_TEXT_VARIATION_NORMAL);
+                    et_pass.setInputType(131073);
                     seePass.setImageResource(R.drawable.eye);
                 }
             }
