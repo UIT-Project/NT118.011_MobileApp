@@ -61,11 +61,12 @@ public class forgotPass extends AppCompatActivity {
                 resetPass.setVisibility(View.GONE);
 
                 //Kiểm tra email đã có tồn tại/đã đăng ký
+
                 firebaseAuth.fetchSignInMethodsForEmail(email).addOnCompleteListener(
                         new OnCompleteListener<SignInMethodQueryResult>() {
                     @Override
                     public void onComplete(@NonNull Task<SignInMethodQueryResult> task) {
-                        if(task.isSuccessful() && !task.getResult().getSignInMethods().isEmpty()){
+                        if(task.isSuccessful() && task.getResult().getSignInMethods().size()>0){
                             //Gửi mail đặt lại mật khẩu bằng Firebase Auth
                             firebaseAuth.sendPasswordResetEmail(email).addOnCompleteListener(
                                     new OnCompleteListener<Void>() {
@@ -90,7 +91,8 @@ public class forgotPass extends AppCompatActivity {
                         else
                         {
                             Toast.makeText(forgotPass.this,
-                                    "Email chưa được đăng ký hoặc không tồn tại!",
+                                    "Email chưa được đăng ký hoặc không tồn tại!"
+                                            +String.valueOf(task.isSuccessful())+String.valueOf(task.getResult().getSignInMethods().isEmpty()),
                                     Toast.LENGTH_SHORT).show();
                             progressBar.setVisibility(View.GONE);
                             resetPass.setVisibility(View.VISIBLE);

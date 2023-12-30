@@ -4,7 +4,10 @@ package com.example.myapplication;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -23,6 +26,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.net.URL;
 
 public class register extends AppCompatActivity {
     private FirebaseAuth mAuth; //Firebase Auth
@@ -56,6 +61,9 @@ public class register extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        //Tên Shared Preferences file
+        String PREF_NAME = getString(R.string.share_pref_name);
+
         //Kết nới giao diện
         EditText et_email = findViewById(R.id.et_register_email),
                 et_pass=findViewById(R.id.et_register_password),
@@ -67,13 +75,32 @@ public class register extends AppCompatActivity {
         ImageView seePass=findViewById(R.id.iv_register_password),
                 seeRepass=findViewById(R.id.iv_register_repassword);
 
-        //Firebase Realtime Database dùng để lưu username
+        //Firebase Realtime Database dùng để lưu thông tin tài khoản mới
         FirebaseDatabase database = FirebaseDatabase.getInstance(
                 "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
         DatabaseReference mDB = database.getReference();
 
+        //Shared Preferences
+        SharedPreferences preferences=getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+
         //Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+
+        //Kiểm nếu đây là lần đầu cài app
+        if(preferences.getBoolean("first_time",true)){
+            editor.putBoolean("first_time",false);
+            editor.apply();
+        } else {
+            if(preferences.getString("default_user_img","").length() == 0){
+              String b64=GeneralFunc.defaultImg2Base64(getApplicationContext());
+              if(b64.length()>0){
+                  editor.putString("default_user_img",b64);
+                  editor.apply();
+              }
+              Toast.makeText(getApplicationContext(), b64+"a",Toast.LENGTH_LONG).show();
+            }
+        }
 
         //Nút đăng ký
         b_register.setOnClickListener(new View.OnClickListener() {
