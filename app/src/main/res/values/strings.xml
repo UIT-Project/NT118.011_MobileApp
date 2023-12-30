@@ -3,4 +3,5 @@
     <string name="title_activity_login">Login</string>
 
     <string name="share_pref_name">SUrPic</string>
+    <string name="profile_pic">profile_pic</string>
 </resources>

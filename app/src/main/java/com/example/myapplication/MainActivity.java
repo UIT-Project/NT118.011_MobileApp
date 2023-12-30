@@ -18,6 +18,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -29,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase firebaseDatabase;
     DatabaseReference mDB;
     FirebaseUser user;
+
+
+    String string="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,29 +69,36 @@ public class MainActivity extends AppCompatActivity {
             Intent intent=new Intent(getApplicationContext(), login.class);
             startActivity(intent);
             finish();
-        } else {
+        } else { //Đang đăng nhập
+            String b64Email = GeneralFunc.str2Base64(user.getEmail());
             //Lấy username từ FB RDB
-            try{
-                mDB.child("users").child(String.valueOf(user.getEmail())).get()
-                        .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if (!task.isSuccessful()) {
-                                    Toast.makeText(MainActivity.this,"Get data fail",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                                else {
-                                    tv_username.setText(String.valueOf(task.getResult().getValue()));
-                                }
+            mDB.child(b64Email).child("username").get().addOnCompleteListener(
+                    new OnCompleteListener<DataSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DataSnapshot> task) {
+                            if (!task.isSuccessful()) {
+                                Toast.makeText(MainActivity.this,"Get data fail",
+                                        Toast.LENGTH_SHORT).show();
+                            } else {
+                                tv_username.setText(String.valueOf(task.getResult().getValue()));
                             }
-                        });} catch (Exception e){}
+                        }
+                    });
 
             //img
-            String string = preferences.getString("default_user_img","");
-            if(string.length()>0){
-                ImageView imageView = findViewById(R.id.img);
-                imageView.setImageBitmap(GeneralFunc.unzipBase64ToImg(string));
-            }
+            mDB.child(b64Email).child(getString(R.string.profile_pic)).get().addOnCompleteListener(
+                            new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    if (!task.isSuccessful()) {
+                        string="";
+                    } else {
+                        string=String.valueOf(task.getResult().getValue());
+                        ImageView imageView = findViewById(R.id.img);
+                        imageView.setImageBitmap(GeneralFunc.unzipBase64ToImg(string));
+                    }
+                }
+            });
 
             //Đăng xuất
             logout.setOnClickListener(new View.OnClickListener() {

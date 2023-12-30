@@ -177,7 +177,7 @@ public class register extends AppCompatActivity {
                                     mDB.child(b64Email)
                                             .child("username").setValue(username);
                                     mDB.child(b64Email)
-                                            .child("profile_pic").setValue(defUserImg);
+                                            .child(getString(R.string.profile_pic)).setValue(defUserImg);
 
                                     //Kết thúc giao diện chờ
                                     progressBar.setVisibility(View.GONE);
@@ -219,6 +219,9 @@ public class register extends AppCompatActivity {
                             }
                         }
                 );
+
+                //Đăng xuất
+                mAuth.signOut();
             }
         });
 
