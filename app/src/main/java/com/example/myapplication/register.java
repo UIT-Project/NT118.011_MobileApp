@@ -87,20 +87,18 @@ public class register extends AppCompatActivity {
         //Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
-        //Kiểm nếu đây là lần đầu cài app
-        if(preferences.getBoolean("first_time",true)){
-            editor.putBoolean("first_time",false);
-            editor.apply();
-        } else {
-            if(preferences.getString("default_user_img","").length() == 0){
-              String b64=GeneralFunc.defaultImg2Base64(getApplicationContext());
-              if(b64.length()>0){
-                  editor.putString("default_user_img",b64);
-                  editor.apply();
-              }
-              Toast.makeText(getApplicationContext(), b64+"a",Toast.LENGTH_LONG).show();
+        //Kiểm tra ảnh mặc định
+        /*Toast.makeText(this, preferences.getString("default_user_img",
+                "")+"a",Toast.LENGTH_LONG).show();
+        if(preferences.getString("default_user_img","").length() == 0){
+            String b64=GeneralFunc.defaultImg2Base64(getApplicationContext());
+            if(b64.length()>0){
+                editor.putString("default_user_img",b64);
+                editor.apply();
             }
-        }
+            Toast.makeText(getApplicationContext(), b64+"a",Toast.LENGTH_LONG).show();
+        }*/
+
 
         //Nút đăng ký
         b_register.setOnClickListener(new View.OnClickListener() {
