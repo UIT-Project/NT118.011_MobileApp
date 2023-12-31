@@ -3,7 +3,11 @@ package com.example.myapplication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.myapplication.databinding.ActivityMainBinding;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -27,12 +32,10 @@ import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     FirebaseAuth firebaseAuth;
-    Button logout;
-    TextView tv_username;
     FirebaseDatabase firebaseDatabase;
     DatabaseReference mDB;
     FirebaseUser user;
-
+    ActivityMainBinding binding;
 
     String string="";
 
@@ -40,7 +43,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         //Khởi tạo act
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        //Yêu cầu cấp quyền
+        GeneralFunc.askPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        //Kết nối giao diện
+        binding=ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        replaceFrag(new homeFrag());
+
+        //Kết nối các fragment với menu item
+        binding.bottomNavView.setOnItemSelectedListener(item -> {
+            if(item.getItemId()==R.id.bn_i_home){
+                replaceFrag(new homeFrag());
+            }
+            if(item.getItemId()==R.id.bn_i_search){
+                replaceFrag(new searchFrag());
+            }
+            if(item.getItemId()==R.id.bn_i_profile){
+                replaceFrag(profileFrag.newInstance(user));
+            }
+
+            return true;
+        });
 
         //Tên Shared Preferences file
         String PREF_NAME = getString(R.string.share_pref_name);
@@ -50,10 +75,6 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = preferences.edit();
         //editor.clear();
         //editor.apply();
-
-        //Kết nối giao diện
-        logout=findViewById(R.id.b_logout);
-        tv_username=findViewById(R.id.tv_username);
 
         //Kết nối FB Realtime DB
         firebaseDatabase=FirebaseDatabase.getInstance(
@@ -72,8 +93,9 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         } else { //Đang đăng nhập
-            //Kiểm tra thời gian đăng nhập
-            user.getIdToken(false).addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+            //Kiểm tra thời gian đăng nhập (hạn đăng nhập là 1 ngày)
+            user.getIdToken(false).addOnCompleteListener(
+                    new OnCompleteListener<GetTokenResult>() {
                 @Override
                 public void onComplete(@NonNull Task<GetTokenResult> task) {
                     if(!task.isSuccessful()){
@@ -93,47 +115,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            String b64Email = GeneralFunc.str2Base64(user.getEmail());
-            //Lấy username từ FB RDB
-            mDB.child(b64Email).child("username").get().addOnCompleteListener(
-                    new OnCompleteListener<DataSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DataSnapshot> task) {
-                            if (!task.isSuccessful()) {
-                                Toast.makeText(MainActivity.this,"Get data fail",
-                                        Toast.LENGTH_SHORT).show();
-                            } else {
-                                tv_username.setText(String.valueOf(task.getResult().getValue()));
-                            }
-                        }
-                    });
-
-            //img
-            mDB.child(b64Email).child(getString(R.string.profile_pic)).get().addOnCompleteListener(
-                            new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if (!task.isSuccessful()) {
-                        string="";
-                    } else {
-                        string=String.valueOf(task.getResult().getValue());
-                        ImageView imageView = findViewById(R.id.img);
-                        imageView.setImageBitmap(GeneralFunc.unzipBase64ToImg(string));
-                    }
-                }
-            });
-
-            //Đăng xuất
-            logout.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    firebaseAuth.signOut();
-                    Intent intent=new Intent(getApplicationContext(), login.class);
-                    startActivity(intent);
-                    finish();
-                }
-            });
         }
 
+    }
+    private void replaceFrag(Fragment fragment){
+        FragmentManager fragmentManager=getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction=fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fl_main,fragment);
+        fragmentTransaction.commit();
     }
 }

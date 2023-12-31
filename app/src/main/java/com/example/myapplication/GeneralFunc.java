@@ -1,6 +1,8 @@
 package com.example.myapplication;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.CountDownTimer;
@@ -8,6 +10,9 @@ import android.os.Looper;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -43,12 +48,12 @@ public class GeneralFunc {
         return new String(bytes);
     }
 
-    //Nén img thành base 64 string với input là đường dẫn tới img
-    public static String zipImg2Base64(String imgPath){
+    //Nén img thành base 64 string với input là bitmap
+    public static String zipImg2Base64(Bitmap bitmap){
         try(ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
             DeflaterOutputStream deflaterOutputStream=new DeflaterOutputStream(byteArrayOutputStream)){
 
-            Bitmap bitmap= BitmapFactory.decodeFile(imgPath);
+            //Bitmap bitmap= BitmapFactory.decodeFile(imgPath,options);
             ByteArrayOutputStream byteArrayOutputStream1=new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100,byteArrayOutputStream1);
             byte[] bytes=byteArrayOutputStream1.toByteArray();
@@ -122,6 +127,7 @@ public class GeneralFunc {
         }
     }
 
+    //Chạy count down
     public static void startTimer(Context context, TextView tv_clickable, TextView tv_cd, int second){
         tv_clickable.setTextColor(context.getColor(R.color.black));
         tv_clickable.setClickable(false);
@@ -138,6 +144,15 @@ public class GeneralFunc {
                 tv_cd.setText("");
             }
         }.start();
+    }
+
+    //Yêu cầu cấp quyền
+    public static void askPermission(Activity activity, String permission){
+        if (ContextCompat.checkSelfPermission(activity, permission) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // Request the permission
+            ActivityCompat.requestPermissions(activity, new String[]{permission}, 1);
+        }
     }
 
 }
