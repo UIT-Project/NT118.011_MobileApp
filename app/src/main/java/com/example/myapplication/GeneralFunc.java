@@ -3,6 +3,11 @@ package com.example.myapplication;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.CountDownTimer;
+import android.os.Looper;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -45,7 +50,7 @@ public class GeneralFunc {
 
             Bitmap bitmap= BitmapFactory.decodeFile(imgPath);
             ByteArrayOutputStream byteArrayOutputStream1=new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80,byteArrayOutputStream1);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100,byteArrayOutputStream1);
             byte[] bytes=byteArrayOutputStream1.toByteArray();
             byteArrayOutputStream1.close();
 
@@ -68,7 +73,7 @@ public class GeneralFunc {
 
             Bitmap bitmap= BitmapFactory.decodeResource(context.getResources(),R.drawable.user);
             ByteArrayOutputStream byteArrayOutputStream1=new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 0,byteArrayOutputStream1);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100,byteArrayOutputStream1);
             byte[] bytes=byteArrayOutputStream1.toByteArray();
             byteArrayOutputStream1.close();
 
@@ -104,6 +109,35 @@ public class GeneralFunc {
         } catch (IOException e){
             return null;
         }
+    }
+
+    //Hàm xử lý ẩn hiện pass
+    public static void showHidPass(ImageView seePass, EditText et_pass){
+        if(et_pass.getInputType()==131073){ //id của normal text
+            et_pass.setInputType(129); //id của password text
+            seePass.setImageResource(R.drawable.eye_close);
+        }else {
+            et_pass.setInputType(131073);
+            seePass.setImageResource(R.drawable.eye);
+        }
+    }
+
+    public static void startTimer(Context context, TextView tv_clickable, TextView tv_cd, int second){
+        tv_clickable.setTextColor(context.getColor(R.color.black));
+        tv_clickable.setClickable(false);
+        CountDownTimer countDownTimer=new CountDownTimer(second*1000,1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                tv_cd.setText(String.valueOf((int)(millisUntilFinished/1000)));
+            }
+
+            @Override
+            public void onFinish() {
+                tv_clickable.setTextColor(context.getColor(R.color.orange_brown));
+                tv_clickable.setClickable(true);
+                tv_cd.setText("");
+            }
+        }.start();
     }
 
 }

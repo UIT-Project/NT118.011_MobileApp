@@ -2,10 +2,12 @@ package com.example.myapplication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,9 +21,19 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 public class login extends AppCompatActivity {
-    FirebaseAuth firebaseAuth; //Firebase Authenciation
+    //Firebase Authenciation
+    FirebaseAuth firebaseAuth;
+
+    //Khóa chống xung đột tiến trình do người dùng
+    private ReentrantLock reentrantLock;
+
     @Override
     public void onStart() {
         super.onStart();
@@ -29,11 +41,9 @@ public class login extends AppCompatActivity {
         //Kiểm tra liệu có người dùng nào đang trong phiên đăng nhập hay không
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
-        //Nếu có người dùng thì chuyển về main act
+        //Nếu có người dùng thì đăng xuất
         if(currentUser != null){
-            Intent intent=new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent);
-            finish();
+            firebaseAuth.signOut();
         }
     }
 
@@ -52,8 +62,16 @@ public class login extends AppCompatActivity {
         ProgressBar progressBar=findViewById(R.id.pb_login);
         ImageView seePass=findViewById(R.id.iv_login_password);
 
+        //Firebase Realtime Database dùng để lưu thông tin tài khoản mới
+        FirebaseDatabase database = FirebaseDatabase.getInstance(
+                "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
+        DatabaseReference mDB = database.getReference();
+
         //Firebase Authenciation
         firebaseAuth = FirebaseAuth.getInstance();
+
+        //Khởi tạo khóa
+        reentrantLock =new ReentrantLock();
 
         //Nút chuyển sang đăng ký
         tv_register.setOnClickListener(new View.OnClickListener() {
@@ -73,40 +91,84 @@ public class login extends AppCompatActivity {
                         pass=et_pass.getText().toString();
 
                 //Kiểm tra đầu vào hợp lệ
-                if(!email.contains("@") || !email.contains(".")){
-                    Toast.makeText(login.this,"Email không hợp lệ",
-                            Toast.LENGTH_SHORT).show();
+                if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+                    ((TextView)findViewById(R.id.tv_login_err_email)).setText(
+                            "*Email không hợp lệ");
                     return;
+                }else {
+                    ((TextView)findViewById(R.id.tv_login_err_email)).setText("");
                 }
-                if(pass.length()<6){
-                    Toast.makeText(login.this,"Mật khẩu không hợp lệ",
-                            Toast.LENGTH_SHORT).show();
+                if(pass.length()<8 || pass.contains(" ")){
+                    ((TextView)findViewById(R.id.tv_login_err_pass)).setText(
+                            "*Mật khẩu không hợp lệ");
                     return;
+                }else {
+                    ((TextView)findViewById(R.id.tv_login_err_pass)).setText("");
                 }
 
+                //Giao diện chờ
                 progressBar.setVisibility(View.VISIBLE);
+                reentrantLock.lock();
 
                 //Đăng nhập dựa trên dịch vụ Firebase Auth
-                firebaseAuth.signInWithEmailAndPassword(email, pass)
-                        .addOnCompleteListener(login.this,
-                                new OnCompleteListener<AuthResult>() {
+                firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(
+                        login.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 progressBar.setVisibility(View.GONE);
 
                                 if (task.isSuccessful()) {
-                                    Toast.makeText(login.this,"Đăng nhập thành công",
-                                            Toast.LENGTH_SHORT).show();
+                                    //Kiểm tra email đã được xác thực
+                                    if(!firebaseAuth.getCurrentUser().isEmailVerified()){
+                                        ((TextView)findViewById(R.id.tv_login_err_email)).setText(
+                                                "*Tài khoản chưa được kích hoạt, vui lòng thực " +
+                                                        "hiện xác thực email trước khi đăng nhập");
+                                        firebaseAuth.signOut();
+                                        return;
+                                    }
+
+                                    //Chuyển đến main act
                                     Intent intent=new Intent(getApplicationContext(),
                                             MainActivity.class);
                                     startActivity(intent);
                                     finish();
                                 } else {
-                                    Toast.makeText(login.this, "Đăng nhập thất bại",
-                                            Toast.LENGTH_SHORT).show();
+                                    //Kiểm tra tài khoản có tồn tại/đã đăng ký
+                                    mDB.child(GeneralFunc.str2Base64(email)).get()
+                                            .addOnCompleteListener(
+                                                    new OnCompleteListener<DataSnapshot>() {
+                                                @Override
+                                                public void onComplete(
+                                                        @NonNull Task<DataSnapshot> task) {
+                                                    if(task.isSuccessful()){
+                                                        if(task.getResult().getChildrenCount()>0){
+                                                            ((TextView)findViewById(
+                                                                    R.id.tv_login_err_pass))
+                                                                    .setText("*Mật khẩu không" +
+                                                                            " chính xác");
+                                                        }
+                                                        else
+                                                        {
+                                                            ((TextView)findViewById(
+                                                                    R.id.tv_login_err_email))
+                                                                    .setText("*Tài khoản không" +
+                                                                            " tồn tại");
+                                                        }
+                                                    } else {
+                                                        Toast.makeText(login.this,
+                                                                "Dăng nhập thất bại",
+                                                                Toast.LENGTH_LONG).show();
+                                                    }
+                                                }
+                                            });
                                 }
                             }
                         });
+
+                //Kết thúc giao diện chờ
+                progressBar.setVisibility(View.GONE);
+                reentrantLock.unlock();
+
             }
         });
 
@@ -114,13 +176,7 @@ public class login extends AppCompatActivity {
         seePass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(et_pass.getInputType()==131073){ //id của normal text
-                    et_pass.setInputType(129); //id của textPassword
-                    seePass.setImageResource(R.drawable.eye_close);
-                }else {
-                    et_pass.setInputType(131073);
-                    seePass.setImageResource(R.drawable.eye);
-                }
+                GeneralFunc.showHidPass(seePass,et_pass);
             }
         });
 

@@ -23,6 +23,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.Calendar;
+
 public class MainActivity extends AppCompatActivity {
     FirebaseAuth firebaseAuth;
     Button logout;
@@ -66,10 +68,31 @@ public class MainActivity extends AppCompatActivity {
 
         //Không có người dùng thì đăng nhập
         if(user==null){
-            Intent intent=new Intent(getApplicationContext(), login.class);
+            Intent intent=new Intent(this, login.class);
             startActivity(intent);
             finish();
         } else { //Đang đăng nhập
+            //Kiểm tra thời gian đăng nhập
+            user.getIdToken(false).addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                @Override
+                public void onComplete(@NonNull Task<GetTokenResult> task) {
+                    if(!task.isSuccessful()){
+                        firebaseAuth.signOut();
+                        Intent intent=new Intent(MainActivity.this, login.class);
+                        startActivity(intent);
+                        finish();
+                        return;
+                    }
+                    if((long)(Calendar.getInstance().getTimeInMillis()/1000) -
+                            task.getResult().getAuthTimestamp() > (60*60*24)){
+                        firebaseAuth.signOut();
+                        Intent intent=new Intent(MainActivity.this, login.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                }
+            });
+
             String b64Email = GeneralFunc.str2Base64(user.getEmail());
             //Lấy username từ FB RDB
             mDB.child(b64Email).child("username").get().addOnCompleteListener(

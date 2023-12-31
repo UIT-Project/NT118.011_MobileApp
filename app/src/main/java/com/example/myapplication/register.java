@@ -41,17 +41,6 @@ public class register extends AppCompatActivity {
     //Khóa chống xung đột tiến trình do người dùng
     private ReentrantLock reentrantLock;
 
-    //Hàm xử lý ẩn hiện pass
-    public void showHidPass(ImageView seePass, EditText et_pass){
-        if(et_pass.getInputType()==131073){ //id của normal text
-            et_pass.setInputType(129); //id của password text
-            seePass.setImageResource(R.drawable.eye_close);
-        }else {
-            et_pass.setInputType(131073);
-            seePass.setImageResource(R.drawable.eye);
-        }
-    }
-
     @Override
     public void onStart() {
         super.onStart();
@@ -193,6 +182,7 @@ public class register extends AppCompatActivity {
                                     progressBar.setVisibility(View.VISIBLE);
                                     reentrantLock.lock();
 
+                                    //Gửi mail xác thực
                                     mAuth.getCurrentUser().sendEmailVerification()
                                             .addOnCompleteListener(register.this,
                                                     new OnCompleteListener<Void>() {
@@ -205,6 +195,11 @@ public class register extends AppCompatActivity {
                                             }
                                         }
                                     });
+
+                                    //Chạy cd gửi lại
+                                    GeneralFunc.startTimer(register.this,(TextView)findViewById(
+                                            R.id.tv_register_success_resend),(TextView)findViewById(
+                                            R.id.tv_register_success_cd),60);
 
                                     //Kết thúc giao diện chờ
                                     progressBar.setVisibility(View.GONE);
@@ -220,8 +215,6 @@ public class register extends AppCompatActivity {
                         }
                 );
 
-                //Đăng xuất
-                mAuth.signOut();
             }
         });
 
@@ -247,13 +240,13 @@ public class register extends AppCompatActivity {
         seePass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showHidPass(seePass,et_pass);
+                GeneralFunc.showHidPass(seePass,et_pass);
             }
         });
         seeRepass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showHidPass(seeRepass,et_repass);
+                GeneralFunc.showHidPass(seeRepass,et_repass);
             }
         });
 
@@ -266,6 +259,7 @@ public class register extends AppCompatActivity {
                 progressBar.setVisibility(View.VISIBLE);
                 reentrantLock.lock();
 
+                //Gửi mail xác thực
                 mAuth.getCurrentUser().sendEmailVerification()
                         .addOnCompleteListener(register.this,
                                 new OnCompleteListener<Void>() {
@@ -283,39 +277,12 @@ public class register extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 reentrantLock.unlock();
 
-                //Chạy thread cd gửi lại
-                CountDownThread countDownThread=new CountDownThread();
-                countDownThread.start();
+                //Chạy cd gửi lại
+                GeneralFunc.startTimer(register.this,(TextView)findViewById(
+                        R.id.tv_register_success_resend),(TextView)findViewById(
+                        R.id.tv_register_success_cd),60);
             }
         });
     }
 
-    class CountDownThread extends Thread{
-        @Override
-        public void run() {
-            super.run();
-            startTimer();
-        }
-
-        private void startTimer(){
-            ((TextView)findViewById(R.id.tv_register_success_resend)).setTextColor(
-                    getColor(R.color.black));
-            ((TextView)findViewById(R.id.tv_register_success_resend)).setClickable(false);
-            CountDownTimer countDownTimer=new CountDownTimer(60000,1000) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-                    ((TextView)findViewById(R.id.tv_register_success_cd)).setText(
-                            String.valueOf((int)(millisUntilFinished/1000)));
-                }
-
-                @Override
-                public void onFinish() {
-                    ((TextView)findViewById(R.id.tv_register_success_resend)).setTextColor(
-                            getColor(R.color.orange_brown));
-                    ((TextView)findViewById(R.id.tv_register_success_resend)).setClickable(true);
-                    ((TextView)findViewById(R.id.tv_register_success_cd)).setText("");
-                }
-            }.start();
-        }
-    }
 }

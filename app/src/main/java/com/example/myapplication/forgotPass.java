@@ -2,9 +2,11 @@ package com.example.myapplication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,12 +19,18 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.SignInMethodQueryResult;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class forgotPass extends AppCompatActivity {
+import java.util.concurrent.locks.ReentrantLock;
 
-    FirebaseAuth firebaseAuth; //Firebase Authenciation
+public class forgotPass extends AppCompatActivity {
+    //Firebase Authenciation
+    FirebaseAuth firebaseAuth;
+
+    //Khóa chống xung đột tiến trình do người dùng
+    private ReentrantLock reentrantLock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,62 +52,74 @@ public class forgotPass extends AppCompatActivity {
                 "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
         DatabaseReference mDB = database.getReference();
 
-        //Nút đặt lại mk
+        //Khởi tạo khóa
+        reentrantLock =new ReentrantLock();
+
+        //Nút gửi mail reset pass
         resetPass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String email=et_email.getText().toString();
 
                 //Kiểm tra email hợp lệ
-                if(!email.contains("@") || !email.contains(".")){
-                    Toast.makeText(forgotPass.this,"Email không hợp lệ",
-                            Toast.LENGTH_SHORT).show();
+                if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+                    ((TextView)findViewById(R.id.tv_forgotPass_err_email)).setText(
+                            "*Email không hợp lệ");
                     return;
+                }else {
+                    ((TextView)findViewById(R.id.tv_forgotPass_err_email)).setText("");
                 }
 
+                //Giao diện chờ
                 progressBar.setVisibility(View.VISIBLE);
-                resetPass.setVisibility(View.GONE);
+                reentrantLock.lock();
 
-                //Kiểm tra email đã có tồn tại/đã đăng ký
-
-                firebaseAuth.fetchSignInMethodsForEmail(email).addOnCompleteListener(
-                        new OnCompleteListener<SignInMethodQueryResult>() {
+                //Kiểm tra tài khoản có tồn tại/đã đăng ký
+                mDB.child(GeneralFunc.str2Base64(email)).get().addOnCompleteListener(
+                        new OnCompleteListener<DataSnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<SignInMethodQueryResult> task) {
-                        if(task.isSuccessful() && task.getResult().getSignInMethods().size()>0){
-                            //Gửi mail đặt lại mật khẩu bằng Firebase Auth
-                            firebaseAuth.sendPasswordResetEmail(email).addOnCompleteListener(
-                                    new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            progressBar.setVisibility(View.GONE);
-                                            resetPass.setVisibility(View.VISIBLE);
-                                            et_email.setText("");
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if(task.isSuccessful()){
+                            if(task.getResult().getChildrenCount()>0){
+                                //Gửi mail đặt lại mật khẩu bằng Firebase Auth
+                                firebaseAuth.sendPasswordResetEmail(email).addOnCompleteListener(
+                                        new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                ((ConstraintLayout)findViewById(R.id.cl_act_forgotPass))
+                                                        .setVisibility(View.GONE);
+                                                ((ConstraintLayout)findViewById(
+                                                        R.id.cl_act_forgotPass_after_first))
+                                                        .setVisibility(View.VISIBLE);
 
-                                            if (task.isSuccessful()) {
-                                                Toast.makeText(forgotPass.this,
-                                                        "Gửi mail thành công!",
-                                                        Toast.LENGTH_SHORT).show();
-                                            }else {
-                                                Toast.makeText(forgotPass.this,
-                                                        "Gửi mail thất bại!",
-                                                        Toast.LENGTH_SHORT).show();
+                                                if (!task.isSuccessful()) {
+                                                    Toast.makeText(forgotPass.this,
+                                                            "Gửi mail thất bại!",
+                                                            Toast.LENGTH_SHORT).show();
+                                                }
                                             }
-                                        }
-                                    });
-                        }
-                        else
-                        {
-                            Toast.makeText(forgotPass.this,
-                                    "Email chưa được đăng ký hoặc không tồn tại!"
-                                            +String.valueOf(task.isSuccessful())+String.valueOf(task.getResult().getSignInMethods().isEmpty()),
-                                    Toast.LENGTH_SHORT).show();
-                            progressBar.setVisibility(View.GONE);
-                            resetPass.setVisibility(View.VISIBLE);
+                                        });
+
+                                //Chạy cd gửi lại
+                                GeneralFunc.startTimer(forgotPass.this,(TextView)findViewById(
+                                        R.id.tv_forgotPass_af_resend),(TextView)findViewById(
+                                        R.id.tv_forgotPass_af_resend_cd),60);
+                            }
+                            else
+                            {
+                                ((TextView)findViewById(R.id.tv_forgotPass_err_email)).setText(
+                                        "*Tài khoản không tồn tại");
+                            }
+                        } else {
+                            Toast.makeText(forgotPass.this,"Kiểm tra sự tồn tại của" +
+                                    " tài khoản thất bại",Toast.LENGTH_LONG).show();
                         }
                     }
                 });
 
+                //Kết thúc giao diện chờ
+                progressBar.setVisibility(View.GONE);
+                reentrantLock.unlock();
             }
         });
 
@@ -112,6 +132,47 @@ public class forgotPass extends AppCompatActivity {
                 finish();
             }
         });
+        ((Button)findViewById(R.id.b_forgotPass_af_login)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), login.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        //Gửi lại
+        ((TextView)findViewById(R.id.tv_forgotPass_af_resend)).setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //Giao diện chờ
+                        progressBar.setVisibility(View.VISIBLE);
+                        reentrantLock.lock();
+
+                        //Gửi mail reset pass
+                        firebaseAuth.sendPasswordResetEmail(et_email.getText().toString())
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (!task.isSuccessful()) {
+                                            Toast.makeText(forgotPass.this,
+                                                    "Gửi mail thất bại!",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
+
+                        //Kết thúc giao diện chờ
+                        progressBar.setVisibility(View.GONE);
+                        reentrantLock.unlock();
+
+                        //Chạy cd gửi lại
+                        GeneralFunc.startTimer(forgotPass.this,(TextView)findViewById(
+                                R.id.tv_forgotPass_af_resend),(TextView)findViewById(
+                                        R.id.tv_forgotPass_af_resend_cd),60);
+                    }
+                });
 
     }
 }

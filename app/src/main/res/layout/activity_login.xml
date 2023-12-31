@@ -23,6 +23,7 @@
         android:text="ĐĂNG NHẬP"
         android:textStyle="bold"
         android:textSize="40dp"
+        android:textColor="@color/orange_brown"
         />
     <TextView
         android:id="@+id/tv_login_2"
@@ -58,13 +59,22 @@
         android:layout_marginLeft="20dp"
         android:hint="Nhập email đã đăng ký"
         />
+    <TextView
+        android:id="@+id/tv_login_err_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tv_login_email"
+        app:layout_constraintTop_toBottomOf="@id/et_login_email"
+        android:layout_marginLeft="20dp"
+        android:textColor="@color/red"/>
+
 
     <TextView
         android:id="@+id/tv_login_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/et_login_email"
+        app:layout_constraintTop_toBottomOf="@id/tv_login_err_email"
         android:text="Mật khẩu"
         android:textSize="25dp"
         android:textStyle="bold"
@@ -82,6 +92,14 @@
         android:hint="Nhập mật khẩu"
         android:inputType="textPassword"
         />
+    <TextView
+        android:id="@+id/tv_login_err_pass"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tv_login_email"
+        app:layout_constraintTop_toBottomOf="@id/et_login_password"
+        android:layout_marginLeft="20dp"
+        android:textColor="@color/red"/>
     <ImageView
         android:id="@+id/iv_login_password"
         android:layout_width="40dp"
