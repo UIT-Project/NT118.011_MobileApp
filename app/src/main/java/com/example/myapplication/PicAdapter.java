@@ -14,26 +14,26 @@ import java.util.List;
 public class PicAdapter extends BaseAdapter {
     private Context context;
     private int layout;
-    private List<String> listB64Img;
+    private List<objectPic> list;
 
-    public PicAdapter(Context context,int layout, List<String> listB64Img){
+    public PicAdapter(Context context,int layout, List<objectPic> list){
         this.context=context;
-        this.listB64Img=listB64Img;
+        this.list=list;
         this.layout=layout;
     }
     @Override
     public int getCount() {
-        return listB64Img.size();
+        return list.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return null;
+        return position;
     }
 
     @Override
     public long getItemId(int position) {
-        return 0;
+        return position;
     }
     private class ViewHolder{
         ImageView imageView;
@@ -53,7 +53,8 @@ public class PicAdapter extends BaseAdapter {
             holder=(ViewHolder) convertView.getTag();
         }
 
-        holder.imageView.setImageBitmap(GeneralFunc.unzipBase64ToImg(listB64Img.get(position)));
+        holder.imageView.setImageBitmap(GeneralFunc.unzipBase64ToImg(list.get(position).getData()));
+        holder.imageView.setTag(list.get(position));
 
         return convertView;
     }

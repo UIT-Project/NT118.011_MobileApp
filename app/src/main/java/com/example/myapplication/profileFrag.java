@@ -2,7 +2,9 @@ package com.example.myapplication;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,7 +12,11 @@ import android.os.Bundle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Parcelable;
 import android.provider.MediaStore;
@@ -18,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -27,13 +34,17 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -77,6 +88,8 @@ public class profileFrag extends Fragment {
 
             //Nhận user
             user=getArguments().getParcelable("fb_user");
+
+
         }
     }
 
@@ -88,25 +101,34 @@ public class profileFrag extends Fragment {
 
         String b64Email=GeneralFunc.str2Base64(user.getEmail());
 
+        GridView gridView=view.findViewById(R.id.gv_profileFrag_listPics);
+        ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
+        TextView tv_username=view.findViewById(R.id.tv_profileFrag_username);
+
+        //Shared Preferences
+        SharedPreferences preferences=view.getContext().getSharedPreferences(view.getContext()
+                .getString(R.string.share_pref_name), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+
         //Tải ảnh đại diện
         mDB.child(b64Email).child(view.getContext().getString(R.string.profile_pic)).get()
                 .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
-                ((ImageView)view.findViewById(R.id.iv_profileFrag_profilePic))
-                        .setImageBitmap(GeneralFunc.unzipBase64ToImg(String.valueOf(
-                                task.getResult().getValue())));
+                userPic.setImageBitmap(GeneralFunc.unzipBase64ToImg(String.valueOf(
+                        task.getResult().getValue())));
             }
         });
 
-        //Lấy tên tài khoản
+        //Lấy tên tài khoản và email
         mDB.child(GeneralFunc.str2Base64(user.getEmail())).child("username").get()
                 .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 String username=String.valueOf(task.getResult().getValue());
 
-                ((TextView)view.findViewById(R.id.tv_profileFrag_username)).setText(username);
+                tv_username.setText(username);
+                ((TextView)view.findViewById(R.id.tv_profileFrag_email)).setText(user.getEmail());
             }
         });
 
@@ -146,15 +168,16 @@ public class profileFrag extends Fragment {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 if(task.isSuccessful()){
-                    ArrayList<String> listB64Img=new ArrayList<String>();
+                    ArrayList<objectPic> list=new ArrayList<objectPic>();
 
                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                        listB64Img.add(String.valueOf(childSnapShot.child("data").getValue()));
+                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
+                                String.valueOf(childSnapShot.child("name").getValue())));
                     }
 
                     PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                            listB64Img);
-                    ((GridView)view.findViewById(R.id.gv_profileFrag_listPics)).setAdapter(
+                            list);
+                    gridView.setAdapter(
                             picAdapter);
                 }
             }
@@ -171,6 +194,135 @@ public class profileFrag extends Fragment {
             }
         });
 
+        //Cập nhật lại danh sách ảnh
+        mDB.child(b64Email).child("pics").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                //Lấy danh sách ảnh của tài khoản
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+                        new OnCompleteListener<DataSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                if(task.isSuccessful()){
+                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
+
+                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue())));
+                                    }
+
+                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
+                                            list);
+                                    gridView.setAdapter(
+                                            picAdapter);
+                                }
+                            }
+                        });
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                //Lấy danh sách ảnh của tài khoản
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+                        new OnCompleteListener<DataSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                if(task.isSuccessful()){
+                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
+
+                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue())));
+                                    }
+
+                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
+                                            list);
+                                    gridView.setAdapter(
+                                            picAdapter);
+                                }
+                            }
+                        });
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                //Lấy danh sách ảnh của tài khoản
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+                        new OnCompleteListener<DataSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                if(task.isSuccessful()){
+                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
+
+                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue())));
+                                    }
+
+                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
+                                            list);
+                                    gridView.setAdapter(
+                                            picAdapter);
+                                }
+                            }
+                        });
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        //Sự kiện click ảnh
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View imgView, int position, long id) {
+                ImageView selectedImg=imgView.findViewById(R.id.iv_itemPic);
+                ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_img)).setImageBitmap(
+                        ((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                        ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(tv_username
+                        .getText().toString());
+
+                String picName=((objectPic)selectedImg.getTag()).getName();
+                if(picName.length()!=0 || picName.equals("null"))
+                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                            "Tên ảnh: "+picName);
+
+                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                        View.GONE);
+                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
+                        View.VISIBLE);
+
+            }
+        });
+
+        //Sự kiện click quay về
+        ((FloatingActionButton)view.findViewById(R.id.fab_profileFrag_vP_back)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_img)).setImageBitmap(null);
+                ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(null);
+                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText("");
+
+                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText("");
+
+                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                        View.VISIBLE);
+                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
+                        View.GONE);
+            }
+        });
+
         return view;
     }
 
@@ -179,13 +331,10 @@ public class profileFrag extends Fragment {
         if(result.getResultCode()== RESULT_OK && result.getData() != null){
             Uri uri=result.getData().getData();
 
-            ImageView imageView=new ImageView(getView().getContext());
-            imageView.setVisibility(View.GONE);
-            imageView.setImageURI(uri);
-
-            mDB.child(GeneralFunc.str2Base64(user.getEmail())).child("pics")
-                    .push().child("data").setValue(GeneralFunc.zipImg2Base64(
-                            ((BitmapDrawable)imageView.getDrawable()).getBitmap()));
+            Intent intent = new Intent(this.getContext(),uploadImg.class);
+            intent.setData(uri);
+            intent.putExtra("b64Email",GeneralFunc.str2Base64(user.getEmail()));
+            startActivity(intent);
         }
     });
 

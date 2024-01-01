@@ -25,7 +25,7 @@
         app:itemTextColor="@color/white"
         android:background="@color/orange_brown"
         app:labelVisibilityMode="unlabeled"
-        app:itemIconSize="24dp"
+        app:itemIconSize="36dp"
         app:itemHorizontalTranslationEnabled="true"
         />
 </androidx.constraintlayout.widget.ConstraintLayout>
