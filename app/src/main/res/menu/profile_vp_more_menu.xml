@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="Chỉnh sửa"
+        android:id="@+id/profile_vp_more_i_edit"
+        />
+    <item android:title="Tải ảnh xuống"
+        android:id="@+id/profile_vp_more_i_download"/>
+</menu>

@@ -46,62 +46,61 @@ public class uploadImg extends AppCompatActivity {
             //Nhận Uri
             uri=intent.getData();
             b64Email=intent.getStringExtra("b64Email");
-        }
 
-        //Kết nối FB Realtime DB
-        firebaseDatabase=FirebaseDatabase.getInstance(
-                "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
-        mDB=firebaseDatabase.getReference();
+            //Kết nối FB Realtime DB
+            firebaseDatabase=FirebaseDatabase.getInstance(
+                    "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
+            mDB=firebaseDatabase.getReference();
 
-        //Cập nhật ảnh lên giao diện
-        binding.ivUploadImg.setImageURI(uri);
+            //Cập nhật ảnh lên giao diện
+            binding.ivUploadImg.setImageURI(uri);
 
-        //Nút quay về
-        binding.bUploadImgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+            //Nút quay về
+            binding.bUploadImgBack.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish();
+                }
+            });
 
-        //Nút tải lên
-        binding.bUploadImgUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Kiểm tra hợp thức Tags
-                Pattern pattern=Pattern.compile("[a-z0-9_]+");
-                String[] strings=binding.etUploadImgTags.getText().toString().trim().split(" ");
-                for (String s:strings) {
-                    if(!pattern.matcher(s).matches() && !s.isEmpty()){
-                        Toast.makeText(uploadImg.this,"Tags không hợp lệ",
+            //Nút tải lên
+            binding.bUploadImgUpload.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //Kiểm tra hợp thức Tags
+                    Pattern pattern=Pattern.compile("[a-z0-9_]+");
+                    String[] strings=binding.etUploadImgTags.getText().toString().trim().split(" ");
+                    for (String s:strings) {
+                        if(!pattern.matcher(s).matches() && !s.isEmpty()){
+                            Toast.makeText(uploadImg.this,"Tags không hợp lệ",
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                    }
+
+                    //Upload dữ liệu
+                    DatabaseReference databaseReference;
+                    try{
+                        databaseReference=mDB.child(b64Email).child("pics")
+                                .push();
+                        databaseReference.child("data").setValue(GeneralFunc.zipImg2Base64(
+                                ((BitmapDrawable)binding.ivUploadImg.getDrawable()).getBitmap()));
+                    }
+                    catch (Exception e){
+                        Toast.makeText(uploadImg.this,"Tải ảnh lên thất bại",
                                 Toast.LENGTH_LONG).show();
                         return;
                     }
+
+                    databaseReference.child("name").setValue(binding.etUploadImgName.getText()
+                            .toString().trim());
+                    databaseReference.child("tags").setValue(binding.etUploadImgTags.getText()
+                            .toString().trim());
+
+                    finish();
                 }
-
-                //Upload dữ liệu
-                DatabaseReference databaseReference;
-                try{
-                   databaseReference=mDB.child(b64Email).child("pics")
-                            .push();
-                   databaseReference.child("data").setValue(GeneralFunc.zipImg2Base64(
-                            ((BitmapDrawable)binding.ivUploadImg.getDrawable()).getBitmap()));
-                }
-                catch (Exception e){
-                    Toast.makeText(uploadImg.this,"Tải ảnh lên thất bại",
-                            Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                databaseReference.child("name").setValue(binding.etUploadImgName.getText()
-                                .toString().trim());
-                databaseReference.child("tags").setValue(binding.etUploadImgTags.getText()
-                                .toString().trim());
-
-                finish();
-            }
-        });
-
+            });
+        }
     }
 
 }

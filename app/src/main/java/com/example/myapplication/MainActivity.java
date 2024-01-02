@@ -30,6 +30,16 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Calendar;
 
+//MainActivity
+//-login
+//--forgotPass
+//--register
+//-fragments
+//--profile
+//---upload
+//--home
+//--search
+
 public class MainActivity extends AppCompatActivity {
     FirebaseAuth firebaseAuth;
     FirebaseDatabase firebaseDatabase;
@@ -46,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Yêu cầu cấp quyền
         GeneralFunc.askPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        GeneralFunc.askPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         //Kết nối giao diện
         binding=ActivityMainBinding.inflate(getLayoutInflater());
@@ -61,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 replaceFrag(new searchFrag());
             }
             if(item.getItemId()==R.id.bn_i_profile){
+                binding.pbMain.setVisibility(View.VISIBLE);
                 replaceFrag(profileFrag.newInstance(user));
             }
 

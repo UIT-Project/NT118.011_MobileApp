@@ -6,11 +6,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".profileFrag"
     android:id="@+id/fl_profileFrag">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/cl_profileFrag_profile"
         android:visibility="visible">
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="12dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:visibility="gone"
+            android:id="@+id/pb_profileFrag_profile"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -127,6 +136,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/cl_profileFrag_viewPic"
         android:visibility="gone">
+
         <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -199,6 +209,7 @@
             android:textSize="24dp"
             android:text="user"
             android:id="@+id/tv_profileFrag_vP_username"/>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -209,6 +220,17 @@
             android:textColor="@color/orange_brown"
             android:textSize="30dp"
             android:id="@+id/tv_profileFrag_vP_namePic"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/cv_profileFrag_vP_profilePic"
+            app:layout_constraintTop_toBottomOf="@id/tv_profileFrag_vP_namePic"
+            android:layout_marginTop="24dp"
+            android:textStyle="bold"
+            android:textColor="@color/orange_brown"
+            android:textSize="30dp"
+            android:id="@+id/tv_profileFrag_vP_tagsPic"
             />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

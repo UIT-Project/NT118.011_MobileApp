@@ -1,10 +1,12 @@
 package com.example.myapplication;
 
 import static android.app.Activity.RESULT_OK;
+import static android.content.Intent.makeMainSelectorActivity;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,8 +20,10 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.os.Environment;
 import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,7 +34,9 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -43,9 +49,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -101,14 +112,19 @@ public class profileFrag extends Fragment {
 
         String b64Email=GeneralFunc.str2Base64(user.getEmail());
 
+
+        ProgressBar progressBar = container.getRootView().findViewById(R.id.pb_main);
+
         GridView gridView=view.findViewById(R.id.gv_profileFrag_listPics);
         ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
         TextView tv_username=view.findViewById(R.id.tv_profileFrag_username);
+
 
         //Shared Preferences
         SharedPreferences preferences=view.getContext().getSharedPreferences(view.getContext()
                 .getString(R.string.share_pref_name), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
+
 
         //Tải ảnh đại diện
         mDB.child(b64Email).child(view.getContext().getString(R.string.profile_pic)).get()
@@ -131,6 +147,29 @@ public class profileFrag extends Fragment {
                 ((TextView)view.findViewById(R.id.tv_profileFrag_email)).setText(user.getEmail());
             }
         });
+
+        //Lấy danh sách ảnh của tài khoản
+        mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+                new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(task.isSuccessful()){
+                    ArrayList<objectPic> list=new ArrayList<objectPic>();
+
+                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                                String.valueOf(childSnapShot.child("name").getValue()),
+                                String.valueOf(childSnapShot.child("tags").getValue())));
+                    }
+
+                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
+                            list);
+                    gridView.setAdapter(
+                            picAdapter);
+                }
+            }
+        });
+
 
         //Nút setting
         ImageButton imageButton = view.findViewById(R.id.ib_profile_setting);
@@ -162,27 +201,6 @@ public class profileFrag extends Fragment {
             }
         });
 
-        //Lấy danh sách ảnh của tài khoản
-        mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if(task.isSuccessful()){
-                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
-                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
-                                String.valueOf(childSnapShot.child("name").getValue())));
-                    }
-
-                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                            list);
-                    gridView.setAdapter(
-                            picAdapter);
-                }
-            }
-        });
-
         //Chọn ảnh
         ((Button)view.findViewById(R.id.b_profileFrag_add)).setOnClickListener(
                 new View.OnClickListener() {
@@ -198,6 +216,7 @@ public class profileFrag extends Fragment {
         mDB.child(b64Email).child("pics").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
                 //Lấy danh sách ảnh của tài khoản
                 mDB.child(b64Email).child("pics").get().addOnCompleteListener(
                         new OnCompleteListener<DataSnapshot>() {
@@ -207,8 +226,9 @@ public class profileFrag extends Fragment {
                                     ArrayList<objectPic> list=new ArrayList<objectPic>();
 
                                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue())));
+                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue()),
+                                                String.valueOf(childSnapShot.child("tags").getValue())));
                                     }
 
                                     PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
@@ -218,10 +238,12 @@ public class profileFrag extends Fragment {
                                 }
                             }
                         });
+
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
                 //Lấy danh sách ảnh của tài khoản
                 mDB.child(b64Email).child("pics").get().addOnCompleteListener(
                         new OnCompleteListener<DataSnapshot>() {
@@ -231,8 +253,26 @@ public class profileFrag extends Fragment {
                                     ArrayList<objectPic> list=new ArrayList<objectPic>();
 
                                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue())));
+                                        objectPic pic=new objectPic(childSnapShot.getKey(),
+                                                String.valueOf(childSnapShot.child("data")
+                                                        .getValue()),
+                                                String.valueOf(childSnapShot.child("name")
+                                                        .getValue()),
+                                                String.valueOf(childSnapShot.child("tags")
+                                                        .getValue()));
+                                        list.add(pic);
+
+                                        ImageView imageView = view.findViewById(
+                                                R.id.iv_profileFrag_vP_img);
+                                        if(imageView.getTag()!=null){
+                                            if(((objectPic)imageView.getTag()).getKey().equals(
+                                                    pic.getKey())){
+                                                imageView.setTag(pic);
+                                                ((TextView)view.findViewById(
+                                                        R.id.tv_profileFrag_vP_namePic)).setText(
+                                                        "Tên ảnh: "+pic.getName());
+                                            }
+                                        }
                                     }
 
                                     PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
@@ -247,6 +287,10 @@ public class profileFrag extends Fragment {
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+                ((FloatingActionButton)view.findViewById(
+                        R.id.fab_profileFrag_vP_back)).performClick();
+
                 //Lấy danh sách ảnh của tài khoản
                 mDB.child(b64Email).child("pics").get().addOnCompleteListener(
                         new OnCompleteListener<DataSnapshot>() {
@@ -256,8 +300,9 @@ public class profileFrag extends Fragment {
                                     ArrayList<objectPic> list=new ArrayList<objectPic>();
 
                                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        list.add(new objectPic(String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue())));
+                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue()),
+                                                String.valueOf(childSnapShot.child("tags").getValue())));
                                     }
 
                                     PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
@@ -285,18 +330,25 @@ public class profileFrag extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View imgView, int position, long id) {
-                ImageView selectedImg=imgView.findViewById(R.id.iv_itemPic);
-                ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_img)).setImageBitmap(
-                        ((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                ImageView selectedImg=imgView.findViewById(R.id.iv_itemPic),
+                        vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                vpImg.setTag(selectedImg.getTag());
+
                 ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
                         ((BitmapDrawable)userPic.getDrawable()).getBitmap());
                 ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(tv_username
                         .getText().toString());
 
-                String picName=((objectPic)selectedImg.getTag()).getName();
-                if(picName.length()!=0 || picName.equals("null"))
+                objectPic pic=(objectPic)selectedImg.getTag();
+                if(pic.getName().length()!=0 || pic.getName().equals("null")){
                     ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
-                            "Tên ảnh: "+picName);
+                            "Tên ảnh: "+pic.getName());
+                }
+                if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                            "Tags: "+pic.getStrHashtags());
+                }
 
                 ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
                         View.GONE);
@@ -315,6 +367,7 @@ public class profileFrag extends Fragment {
                 ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText("");
 
                 ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText("");
+                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText("");
 
                 ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
                         View.VISIBLE);
@@ -323,11 +376,84 @@ public class profileFrag extends Fragment {
             }
         });
 
+        //Nút more của view pic
+        FloatingActionButton floatingActionButton = view.findViewById(R.id.fab_profileFrag_vP_more);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Khởi tạo menu setting
+                PopupMenu popupMenu=new PopupMenu(view.getContext(),floatingActionButton);
+
+                //Nhận item
+                popupMenu.getMenuInflater().inflate(R.menu.profile_vp_more_menu,popupMenu.getMenu());
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        //Lựa chọn chỉnh sửa
+                        if(item.getItemId()==R.id.profile_vp_more_i_edit){
+                            Intent intent=new Intent(getActivity().getApplicationContext(),
+                                    updateImg.class);
+
+                            intent.putExtra("picInfo",(objectPic)((ImageView)view
+                                    .findViewById(R.id.iv_profileFrag_vP_img)).getTag());
+                            intent.putExtra("b64Email",GeneralFunc.str2Base64(user.getEmail()));
+
+                            getActivity().startActivity(intent);
+                        }
+
+                        //Lựa chọn tải về
+                        if(item.getItemId()==R.id.profile_vp_more_i_download){
+                            File directory = new File(Environment.getExternalStorageDirectory(),
+                                    Environment.DIRECTORY_PICTURES+"/surpic");
+                            if (!directory.exists()) {
+                                directory.mkdirs();
+                            }
+
+                            //Tự động tạo file dựa vào thời gian
+                            String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
+                                    new Date()).toString();
+                            String fileName = "image_" + timeStamp + ".jpeg";
+
+                            File file = new File(directory, fileName);
+
+                            try {
+                                //Lưu ảnh vào file
+                                FileOutputStream fos = new FileOutputStream(file);
+                                ((BitmapDrawable)((ImageView)view.findViewById(
+                                        R.id.iv_profileFrag_vP_img)).getDrawable()).getBitmap()
+                                        .compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                                fos.close();
+
+                                //Thông báo để GALLERY cập nhật
+                                view.getContext().sendBroadcast( makeMainSelectorActivity(
+                                        android.content.Intent.ACTION_MAIN,
+                                        android.content.Intent.CATEGORY_APP_GALLERY));
+
+                                Toast.makeText(view.getContext(),"Tải xuống thành công",
+                                        Toast.LENGTH_SHORT).show();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        return true;
+                    }
+                });
+
+                //Hiện menu setting
+                popupMenu.show();
+            }
+        });
+
+        //Kết thúc giao diện chờ
+        progressBar.setVisibility(View.GONE);
+
         return view;
     }
 
     //Xử lý sau khi chọn được ảnh
-    ActivityResultLauncher<Intent> takeImg=registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),result->{
+    ActivityResultLauncher<Intent> takeImg=registerForActivityResult(new
+            ActivityResultContracts.StartActivityForResult(),result->{
         if(result.getResultCode()== RESULT_OK && result.getData() != null){
             Uri uri=result.getData().getData();
 
