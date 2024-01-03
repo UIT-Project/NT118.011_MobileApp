@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Patterns;
@@ -117,6 +119,12 @@ public class login extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 progressBar.setVisibility(View.GONE);
 
+                                if(!GeneralFunc.hasInternet(login.this)){
+                                    Toast.makeText(login.this,"Không có" +
+                                            " internet",Toast.LENGTH_LONG).show();
+                                    return;
+                                }
+
                                 if (task.isSuccessful()) {
                                     //Kiểm tra email đã được xác thực
                                     if(!firebaseAuth.getCurrentUser().isEmailVerified()){
@@ -137,30 +145,31 @@ public class login extends AppCompatActivity {
                                     mDB.child(GeneralFunc.str2Base64(email)).get()
                                             .addOnCompleteListener(
                                                     new OnCompleteListener<DataSnapshot>() {
-                                                @Override
-                                                public void onComplete(
-                                                        @NonNull Task<DataSnapshot> task) {
-                                                    if(task.isSuccessful()){
-                                                        if(task.getResult().getChildrenCount()>0){
-                                                            ((TextView)findViewById(
-                                                                    R.id.tv_login_err_pass))
-                                                                    .setText("*Mật khẩu không" +
-                                                                            " chính xác");
+                                                        @Override
+                                                        public void onComplete(
+                                                                @NonNull Task<DataSnapshot> task) {
+                                                            if(task.isSuccessful()){
+                                                                if(task.getResult().getChildrenCount()>0){
+                                                                    ((TextView)findViewById(
+                                                                            R.id.tv_login_err_pass))
+                                                                            .setText("*Mật khẩu không" +
+                                                                                    " chính xác");
+                                                                }
+                                                                else
+                                                                {
+                                                                    ((TextView)findViewById(
+                                                                            R.id.tv_login_err_email))
+                                                                            .setText("*Tài khoản không" +
+                                                                                    " tồn tại");
+                                                                }
+                                                            } else {
+                                                                Toast.makeText(login.this,
+                                                                        "Dăng nhập thất bại",
+                                                                        Toast.LENGTH_LONG).show();
+                                                            }
                                                         }
-                                                        else
-                                                        {
-                                                            ((TextView)findViewById(
-                                                                    R.id.tv_login_err_email))
-                                                                    .setText("*Tài khoản không" +
-                                                                            " tồn tại");
-                                                        }
-                                                    } else {
-                                                        Toast.makeText(login.this,
-                                                                "Dăng nhập thất bại",
-                                                                Toast.LENGTH_LONG).show();
-                                                    }
-                                                }
-                                            });
+                                                    });
+
                                 }
                             }
                         });

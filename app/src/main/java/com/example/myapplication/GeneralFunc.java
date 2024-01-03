@@ -1,10 +1,15 @@
 package com.example.myapplication;
 
+import static android.content.Context.CONNECTIVITY_SERVICE;
+import static androidx.core.content.ContextCompat.getSystemService;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.CountDownTimer;
 import android.os.Looper;
 import android.widget.EditText;
@@ -16,6 +21,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import com.google.firebase.database.DatabaseReference;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -156,6 +163,15 @@ public class GeneralFunc {
             // Request the permission
             ActivityCompat.requestPermissions(activity, new String[]{permission}, 1);
         }
+    }
+
+    //Kiểm tra internet
+    public static boolean hasInternet(Activity activity){
+        ConnectivityManager connectivityManager=
+                (ConnectivityManager) activity.getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo=connectivityManager!=null?
+                connectivityManager.getActiveNetworkInfo():null;
+        return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
 }

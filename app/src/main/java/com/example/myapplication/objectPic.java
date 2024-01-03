@@ -10,23 +10,14 @@ public class objectPic implements Parcelable {
     private String data;
     private String name;
     private String[] Tags;
+    private String b64EmailOwner;
 
-    public objectPic(String key, String data, String name, String strTags){
+    public objectPic(String key, String data, String name, String strTags,String b64EmailOwner){
         this.key=key;
         this.data=data;
         this.name=name;
         this.Tags=strTags.split(" ");
-    }
-
-    public objectPic(String data, String name){
-        this.data=data;
-        this.name=name;
-    }
-
-    public objectPic(String data, String name, String strTags){
-        this.data=data;
-        this.name=name;
-        this.Tags=strTags.split(" ");
+        this.b64EmailOwner=b64EmailOwner;
     }
 
     public String getKey() {
@@ -45,10 +36,14 @@ public class objectPic implements Parcelable {
         return Tags;
     }
 
+    public String getB64EmailOwner() {
+        return b64EmailOwner;
+    }
+
     public String getStrTags(){return String.join(" ",Tags);}
     public String getStrHashtags(){
         String hashtags="#"+String.join(" #",Tags);
-        return hashtags.substring(0,hashtags.length()-2);
+        return hashtags.substring(0,hashtags.length());
     }
 
 
@@ -56,6 +51,7 @@ public class objectPic implements Parcelable {
         key=in.readString();
         data=in.readString();
         name=in.readString();
+        b64EmailOwner=in.readString();
 
         Tags=in.createStringArray();
     }
@@ -81,6 +77,7 @@ public class objectPic implements Parcelable {
         dest.writeString(key);
         dest.writeString(data);
         dest.writeString(name);
+        dest.writeString(b64EmailOwner);
 
         if(Tags!=null)
             dest.writeStringArray(Tags);

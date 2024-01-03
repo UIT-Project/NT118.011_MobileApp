@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         //Yêu cầu cấp quyền
         GeneralFunc.askPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         GeneralFunc.askPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        GeneralFunc.askPermission(this, Manifest.permission.ACCESS_NETWORK_STATE);
 
         //Kết nối giao diện
         binding=ActivityMainBinding.inflate(getLayoutInflater());

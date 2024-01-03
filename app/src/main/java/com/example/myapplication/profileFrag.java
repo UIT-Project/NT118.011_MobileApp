@@ -30,6 +30,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -99,8 +100,6 @@ public class profileFrag extends Fragment {
 
             //Nhận user
             user=getArguments().getParcelable("fb_user");
-
-
         }
     }
 
@@ -112,19 +111,9 @@ public class profileFrag extends Fragment {
 
         String b64Email=GeneralFunc.str2Base64(user.getEmail());
 
-
-        ProgressBar progressBar = container.getRootView().findViewById(R.id.pb_main);
-
         GridView gridView=view.findViewById(R.id.gv_profileFrag_listPics);
         ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
         TextView tv_username=view.findViewById(R.id.tv_profileFrag_username);
-
-
-        //Shared Preferences
-        SharedPreferences preferences=view.getContext().getSharedPreferences(view.getContext()
-                .getString(R.string.share_pref_name), Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-
 
         //Tải ảnh đại diện
         mDB.child(b64Email).child(view.getContext().getString(R.string.profile_pic)).get()
@@ -159,13 +148,13 @@ public class profileFrag extends Fragment {
                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
                         list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
                                 String.valueOf(childSnapShot.child("name").getValue()),
-                                String.valueOf(childSnapShot.child("tags").getValue())));
+                                String.valueOf(childSnapShot.child("tags").getValue()),b64Email));
                     }
 
-                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                            list);
-                    gridView.setAdapter(
-                            picAdapter);
+                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,list);
+                    gridView.setAdapter(picAdapter);
+
+                    ((ProgressBar)view.getRootView().findViewById(R.id.pb_main)).setVisibility(View.GONE);
                 }
             }
         });
@@ -212,120 +201,6 @@ public class profileFrag extends Fragment {
             }
         });
 
-        //Cập nhật lại danh sách ảnh
-        mDB.child(b64Email).child("pics").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if(task.isSuccessful()){
-                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
-                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue())));
-                                    }
-
-                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                                            list);
-                                    gridView.setAdapter(
-                                            picAdapter);
-                                }
-                            }
-                        });
-
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if(task.isSuccessful()){
-                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
-                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        objectPic pic=new objectPic(childSnapShot.getKey(),
-                                                String.valueOf(childSnapShot.child("data")
-                                                        .getValue()),
-                                                String.valueOf(childSnapShot.child("name")
-                                                        .getValue()),
-                                                String.valueOf(childSnapShot.child("tags")
-                                                        .getValue()));
-                                        list.add(pic);
-
-                                        ImageView imageView = view.findViewById(
-                                                R.id.iv_profileFrag_vP_img);
-                                        if(imageView.getTag()!=null){
-                                            if(((objectPic)imageView.getTag()).getKey().equals(
-                                                    pic.getKey())){
-                                                imageView.setTag(pic);
-                                                ((TextView)view.findViewById(
-                                                        R.id.tv_profileFrag_vP_namePic)).setText(
-                                                        "Tên ảnh: "+pic.getName());
-                                            }
-                                        }
-                                    }
-
-                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                                            list);
-                                    gridView.setAdapter(
-                                            picAdapter);
-                                }
-                            }
-                        });
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
-                ((FloatingActionButton)view.findViewById(
-                        R.id.fab_profileFrag_vP_back)).performClick();
-
-                //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if(task.isSuccessful()){
-                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
-                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue())));
-                                    }
-
-                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                                            list);
-                                    gridView.setAdapter(
-                                            picAdapter);
-                                }
-                            }
-                        });
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
         //Sự kiện click ảnh
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -355,6 +230,13 @@ public class profileFrag extends Fragment {
                 ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
                         View.VISIBLE);
 
+                Intent intent=new Intent(view.getContext(),viewPic.class);
+                intent.putExtra("user",new objectUser(user.getEmail(),false,
+                        GeneralFunc.zipImg2Base64(((BitmapDrawable)userPic.getDrawable())
+                                .getBitmap()),tv_username.getText().toString()));
+                intent.putExtra("viewPic",pic);
+
+                startActivity(intent);
             }
         });
 
@@ -445,10 +327,136 @@ public class profileFrag extends Fragment {
             }
         });
 
-        //Kết thúc giao diện chờ
-        progressBar.setVisibility(View.GONE);
+        //Cập nhật lại danh sách ảnh
+        mDB.child(b64Email).child("pics").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                //Lấy danh sách ảnh của tài khoản
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+                        new OnCompleteListener<DataSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                if(task.isSuccessful()){
+                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
+
+                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue()),
+                                                String.valueOf(childSnapShot.child("tags").getValue()),b64Email));
+                                    }
+
+                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
+                                            list);
+                                    gridView.setAdapter(
+                                            picAdapter);
+                                }
+                            }
+                        });
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                //Lấy danh sách ảnh của tài khoản
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+                        new OnCompleteListener<DataSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                if(task.isSuccessful()){
+                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
+
+                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                        objectPic pic=new objectPic(childSnapShot.getKey(),
+                                                String.valueOf(childSnapShot.child("data")
+                                                        .getValue()),
+                                                String.valueOf(childSnapShot.child("name")
+                                                        .getValue()),
+                                                String.valueOf(childSnapShot.child("tags")
+                                                        .getValue()),b64Email);
+                                        list.add(pic);
+
+                                        ImageView imageView = view.findViewById(
+                                                R.id.iv_profileFrag_vP_img);
+                                        if(imageView.getTag()!=null){
+                                            if(((objectPic)imageView.getTag()).getKey().equals(
+                                                    pic.getKey())){
+                                                imageView.setTag(pic);
+                                                ((TextView)view.findViewById(
+                                                        R.id.tv_profileFrag_vP_namePic)).setText(
+                                                        "Tên ảnh: "+pic.getName());
+                                            }
+                                        }
+                                    }
+
+                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
+                                            list);
+                                    gridView.setAdapter(
+                                            picAdapter);
+                                }
+                            }
+                        });
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+                ((FloatingActionButton)view.findViewById(
+                        R.id.fab_profileFrag_vP_back)).performClick();
+
+                //Lấy danh sách ảnh của tài khoản
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+                        new OnCompleteListener<DataSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                if(task.isSuccessful()){
+                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
+
+                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue()),
+                                                String.valueOf(childSnapShot.child("tags").getValue()),b64Email));
+                                    }
+
+                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
+                                            list);
+                                    gridView.setAdapter(
+                                            picAdapter);
+                                }
+                            }
+                        });
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     //Xử lý sau khi chọn được ảnh
