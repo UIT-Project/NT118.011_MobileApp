@@ -19,6 +19,20 @@ public class objectPic implements Parcelable {
         this.Tags=strTags.split(" ");
         this.b64EmailOwner=b64EmailOwner;
     }
+    public objectPic(String key, String name, String strTags,String b64EmailOwner){
+        this.key=key;
+        this.name=name;
+        this.Tags=strTags.split(" ");
+        this.b64EmailOwner=b64EmailOwner;
+    }
+
+    public void setB64EmailOwner(String b64EmailOwner) {
+        this.b64EmailOwner = b64EmailOwner;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
 
     public String getKey() {
         return key;

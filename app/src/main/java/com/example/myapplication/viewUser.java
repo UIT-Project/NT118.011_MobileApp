@@ -97,6 +97,8 @@ public class viewUser extends AppCompatActivity {
                         public void onComplete(@NonNull Task<DataSnapshot> task) {
                             String username=String.valueOf(task.getResult().getValue());
 
+                            binding.tvViewUser1.setText(binding.tvViewUser1.getText().toString()
+                                    +username);
                             tv_username.setText(username);
                             binding.tvViewUserEmail.setText(GeneralFunc.base64ToStr(targetUserB64Email));
                         }

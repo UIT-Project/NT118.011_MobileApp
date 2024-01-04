@@ -53,6 +53,7 @@ public class viewPic extends AppCompatActivity {
 
         Intent intent=getIntent();
         if(intent!=null){
+            binding.pbViewPic.setVisibility(View.VISIBLE);
             //Kết nối FB Realtime DB
             firebaseDatabase= FirebaseDatabase.getInstance(
                     "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
@@ -62,22 +63,40 @@ public class viewPic extends AppCompatActivity {
             user = intent.getParcelableExtra("user");
             pic = intent.getParcelableExtra("viewPic");
 
-            //Cập nhật giao diện
             ImageView vpImg = binding.ivViewPicImg;
-            vpImg.setImageBitmap(GeneralFunc.unzipBase64ToImg(pic.getData()));
-            vpImg.setTag(pic);
+
+            //Cập nhật giao diện
+            if(pic==null){
+                pic=intent.getParcelableExtra("viewPicMin");
+
+                mDB.child(pic.getB64EmailOwner()).child("pics").child(pic.getKey()).get()
+                        .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if(task.isSuccessful()){
+                            vpImg.setTag(task.getResult().child("data").getValue());
+                            vpImg.setImageBitmap(GeneralFunc.unzipBase64ToImg(vpImg.getTag()
+                                    .toString()));
+                        }
+                    }
+                });
+            }else{
+                vpImg.setImageBitmap(GeneralFunc.unzipBase64ToImg(pic.getData()));
+                vpImg.setTag(pic);
+            }
 
             mDB.child(pic.getB64EmailOwner()).child(getString(R.string.profile_pic)).get()
                     .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if(task.isSuccessful()){
-                        binding.ivViewPicProfilePic.setImageBitmap(GeneralFunc.unzipBase64ToImg(
-                                task.getResult().getValue().toString()));
-                        binding.ivViewPicProfilePic.setTag(task.getResult().getValue().toString());
-                    }
-                }
-            });
+                        @Override
+                        public void onComplete(@NonNull Task<DataSnapshot> task) {
+                            if(task.isSuccessful()){
+                                binding.ivViewPicProfilePic.setImageBitmap(GeneralFunc.unzipBase64ToImg(
+                                        task.getResult().getValue().toString()));
+                                binding.ivViewPicProfilePic.setTag(task.getResult().getValue().toString());
+                                binding.pbViewPic.setVisibility(GONE);
+                            }
+                        }
+                    });
             mDB.child(pic.getB64EmailOwner()).child("username").get()
                     .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
                         @Override
@@ -99,59 +118,59 @@ public class viewPic extends AppCompatActivity {
             //Cập nhật trạng thái theo dõi
             mDB.child(user.getB64Email()).child("follow").child(pic.getB64EmailOwner())
                     .get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if(task.isSuccessful()){
-                        if(task.getResult().getValue()!=null){
-                            binding.bViewPicFollow.setText("Bỏ theo dõi");
-                            binding.bViewPicFollow.setBackgroundTintList(ContextCompat
-                                    .getColorStateList(viewPic.this,
-                                            R.color.red));
-                            binding.bViewPicFollow.setTag("1");
-                        }
-                    }
-                }
-            });
-
-            //Cập nhật trạng thái yêu thích
-            mDB.child(user.getB64Email()).child("love").child(pic.getB64EmailOwner())
-                    .child(pic.getKey()).get().addOnCompleteListener(
-                            new OnCompleteListener<DataSnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<DataSnapshot> task) {
                             if(task.isSuccessful()){
                                 if(task.getResult().getValue()!=null){
-                                    binding.ibViewPicLove.setImageDrawable(getDrawable(
-                                            R.drawable.baseline_favorite_24));
-                                    binding.ibViewPicLove.setTag("1");
+                                    binding.bViewPicFollow.setText("Bỏ theo dõi");
+                                    binding.bViewPicFollow.setBackgroundTintList(ContextCompat
+                                            .getColorStateList(viewPic.this,
+                                                    R.color.red));
+                                    binding.bViewPicFollow.setTag("1");
                                 }
                             }
                         }
                     });
 
+            //Cập nhật trạng thái yêu thích
+            mDB.child(user.getB64Email()).child("love").child(pic.getB64EmailOwner())
+                    .child(pic.getKey()).get().addOnCompleteListener(
+                            new OnCompleteListener<DataSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                    if(task.isSuccessful()){
+                                        if(task.getResult().getValue()!=null){
+                                            binding.ibViewPicLove.setImageDrawable(getDrawable(
+                                                    R.drawable.baseline_favorite_24));
+                                            binding.ibViewPicLove.setTag("1");
+                                        }
+                                    }
+                                }
+                            });
+
 
             //Cập nhật số người theo dõi và số người love
             mDB.child(pic.getB64EmailOwner()).child("follower").get().addOnCompleteListener(
                     new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if(task.isSuccessful()){
-                        binding.tvViewPicNumberOfFollower.setText(String.valueOf(task.getResult()
-                                .getChildrenCount())+" người theo dõi");
-                    }
-                }
-            });
+                        @Override
+                        public void onComplete(@NonNull Task<DataSnapshot> task) {
+                            if(task.isSuccessful()){
+                                binding.tvViewPicNumberOfFollower.setText(String.valueOf(task.getResult()
+                                        .getChildrenCount())+" người theo dõi");
+                            }
+                        }
+                    });
             mDB.child(pic.getB64EmailOwner()).child("pics").child(pic.getKey())
                     .child("lover").get().addOnCompleteListener(
-                    new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if(task.isSuccessful()){
-                        binding.tvViewPicNumberOfLove.setText(String.valueOf(task.getResult()
-                                .getChildrenCount()));
-                    }
-                }
-            });
+                            new OnCompleteListener<DataSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                    if(task.isSuccessful()){
+                                        binding.tvViewPicNumberOfLove.setText(String.valueOf(task.getResult()
+                                                .getChildrenCount()));
+                                    }
+                                }
+                            });
 
             //Nút quay về
             binding.fabViewPicBack.setOnClickListener(new View.OnClickListener() {
@@ -212,38 +231,45 @@ public class viewPic extends AppCompatActivity {
 
                             //Lựa chọn tải về
                             if(item.getItemId()==R.id.vp_more_i_download){
-                                File directory = new File(Environment.getExternalStorageDirectory(),
-                                        Environment.DIRECTORY_PICTURES+"/surpic");
-                                if (!directory.exists()) {
-                                    directory.mkdirs();
-                                }
+                                mDB.child(pic.getB64EmailOwner()).child("pics")
+                                        .child(pic.getKey()).child("full").get()
+                                        .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                        File directory = new File(Environment.getExternalStorageDirectory(),
+                                                Environment.DIRECTORY_PICTURES+"/surpic");
+                                        if (!directory.exists()) {
+                                            directory.mkdirs();
+                                        }
 
-                                //Tự động tạo file dựa vào thời gian
-                                String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
-                                        new Date()).toString();
-                                String fileName = "image_" + timeStamp + ".jpeg";
+                                        //Tự động tạo file dựa vào thời gian
+                                        String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
+                                                new Date()).toString();
+                                        String fileName = "image_" + timeStamp + ".jpeg";
 
-                                File file = new File(directory, fileName);
+                                        File file = new File(directory, fileName);
 
-                                try {
-                                    //Lưu ảnh vào file
-                                    FileOutputStream fos = new FileOutputStream(file);
-                                    ((BitmapDrawable)binding.ivViewPicImg.getDrawable()).getBitmap()
-                                            .compress(Bitmap.CompressFormat.JPEG, 100, fos);
-                                    fos.close();
+                                        try {
+                                            //Lưu ảnh vào file
+                                            FileOutputStream fos = new FileOutputStream(file);
+                                            GeneralFunc.unzipBase64ToImg(task.getResult().getValue()
+                                                    .toString()).compress(Bitmap.CompressFormat.JPEG,
+                                                    100, fos);
+                                            fos.close();
 
-                                    //Thông báo để GALLERY cập nhật
-                                    viewPic.this.sendBroadcast( makeMainSelectorActivity(
-                                            android.content.Intent.ACTION_MAIN,
-                                            android.content.Intent.CATEGORY_APP_GALLERY));
+                                            //Thông báo để GALLERY cập nhật
+                                            viewPic.this.sendBroadcast( makeMainSelectorActivity(
+                                                    android.content.Intent.ACTION_MAIN,
+                                                    android.content.Intent.CATEGORY_APP_GALLERY));
 
-                                    Toast.makeText(viewPic.this,"Tải xuống thành công",
-                                            Toast.LENGTH_SHORT).show();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                            Toast.makeText(viewPic.this,"Tải xuống thành công",
+                                                    Toast.LENGTH_SHORT).show();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
                             }
-
                             return true;
                         }
                     });
@@ -311,6 +337,16 @@ public class viewPic extends AppCompatActivity {
 
             //Click ảnh đại diện/tên tk
             binding.ivViewPicProfilePic.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent1=new Intent(viewPic.this, viewUser.class);
+                    intent1.putExtra("user",user);
+                    intent1.putExtra("targetUserB64Email",pic.getB64EmailOwner());
+
+                    startActivity(intent1);
+                }
+            });
+            binding.tvViewPicUsername.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent intent1=new Intent(viewPic.this, viewUser.class);

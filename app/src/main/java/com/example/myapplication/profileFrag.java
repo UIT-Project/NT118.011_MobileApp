@@ -114,6 +114,7 @@ public class profileFrag extends Fragment {
         GridView gridView=view.findViewById(R.id.gv_profileFrag_listPics);
         ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
         TextView tv_username=view.findViewById(R.id.tv_profileFrag_username);
+        ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.VISIBLE);
 
         //Tải ảnh đại diện
         mDB.child(b64Email).child(view.getContext().getString(R.string.profile_pic)).get()
@@ -154,7 +155,7 @@ public class profileFrag extends Fragment {
                     PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,list);
                     gridView.setAdapter(picAdapter);
 
-                    ((ProgressBar)view.getRootView().findViewById(R.id.pb_main)).setVisibility(View.GONE);
+                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
                 }
             }
         });
@@ -229,14 +230,6 @@ public class profileFrag extends Fragment {
                         View.GONE);
                 ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
                         View.VISIBLE);
-
-                Intent intent=new Intent(view.getContext(),viewPic.class);
-                intent.putExtra("user",new objectUser(user.getEmail(),false,
-                        GeneralFunc.zipImg2Base64(((BitmapDrawable)userPic.getDrawable())
-                                .getBitmap()),tv_username.getText().toString()));
-                intent.putExtra("viewPic",pic);
-
-                startActivity(intent);
             }
         });
 
@@ -285,37 +278,46 @@ public class profileFrag extends Fragment {
 
                         //Lựa chọn tải về
                         if(item.getItemId()==R.id.profile_vp_more_i_download){
-                            File directory = new File(Environment.getExternalStorageDirectory(),
-                                    Environment.DIRECTORY_PICTURES+"/surpic");
-                            if (!directory.exists()) {
-                                directory.mkdirs();
-                            }
+                            mDB.child(b64Email).child("pics").child(
+                                    ((objectPic)((ImageView)view.findViewById(
+                                            R.id.iv_profileFrag_vP_img)).getTag()).getKey())
+                                    .child("full").get()
+                                    .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                    File directory = new File(Environment.getExternalStorageDirectory(),
+                                            Environment.DIRECTORY_PICTURES+"/surpic");
+                                    if (!directory.exists()) {
+                                        directory.mkdirs();
+                                    }
 
-                            //Tự động tạo file dựa vào thời gian
-                            String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
-                                    new Date()).toString();
-                            String fileName = "image_" + timeStamp + ".jpeg";
+                                    //Tự động tạo file dựa vào thời gian
+                                    String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
+                                            new Date()).toString();
+                                    String fileName = "image_" + timeStamp + ".jpeg";
 
-                            File file = new File(directory, fileName);
+                                    File file = new File(directory, fileName);
 
-                            try {
-                                //Lưu ảnh vào file
-                                FileOutputStream fos = new FileOutputStream(file);
-                                ((BitmapDrawable)((ImageView)view.findViewById(
-                                        R.id.iv_profileFrag_vP_img)).getDrawable()).getBitmap()
-                                        .compress(Bitmap.CompressFormat.JPEG, 100, fos);
-                                fos.close();
+                                    try {
+                                        //Lưu ảnh vào file
+                                        FileOutputStream fos = new FileOutputStream(file);
+                                        GeneralFunc.unzipBase64ToImg(task.getResult().getValue()
+                                                .toString()).compress(Bitmap.CompressFormat.JPEG,
+                                                100, fos);
+                                        fos.close();
 
-                                //Thông báo để GALLERY cập nhật
-                                view.getContext().sendBroadcast( makeMainSelectorActivity(
-                                        android.content.Intent.ACTION_MAIN,
-                                        android.content.Intent.CATEGORY_APP_GALLERY));
+                                        //Thông báo để GALLERY cập nhật
+                                        view.getContext().sendBroadcast( makeMainSelectorActivity(
+                                                android.content.Intent.ACTION_MAIN,
+                                                android.content.Intent.CATEGORY_APP_GALLERY));
 
-                                Toast.makeText(view.getContext(),"Tải xuống thành công",
-                                        Toast.LENGTH_SHORT).show();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                                        Toast.makeText(view.getContext(),"Tải xuống thành công",
+                                                Toast.LENGTH_SHORT).show();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
                         }
 
                         return true;
@@ -442,21 +444,6 @@ public class profileFrag extends Fragment {
         });
 
         return view;
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
     }
 
     //Xử lý sau khi chọn được ảnh

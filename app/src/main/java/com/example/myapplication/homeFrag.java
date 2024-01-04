@@ -1,15 +1,24 @@
 package com.example.myapplication;
 
+import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import android.os.TransactionTooLargeException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -23,6 +32,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -32,40 +42,19 @@ import java.util.ArrayList;
 public class homeFrag extends Fragment {
     RecyclerView recyclerView;
     ArrayList<objectPic> picArrayList;
-    HomeAdapter adapter;
     FirebaseAuth firebaseAuth;
     FirebaseDatabase firebaseDatabase;
     DatabaseReference mDB;
     FirebaseUser user;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-
-    // TODO: Rename and change types of parameters
-
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
     public homeFrag() {
         // Required empty public constructor
     }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment homeFrag.
-     */
-    public static homeFrag newInstance(String param1, String param2) {
+    //Truyền tham số
+    public static homeFrag newInstance(FirebaseUser firebaseUser) {
         homeFrag fragment = new homeFrag();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putParcelable("fb_user",firebaseUser);
         fragment.setArguments(args);
         return fragment;
     }
@@ -73,12 +62,8 @@ public class homeFrag extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Nhận tham số
         if (getArguments() != null) {
-
-            picArrayList=new ArrayList<>();
-
-
-            ArrayList<String> b64Emails= new ArrayList<>();
             //FB Auth
             firebaseAuth=FirebaseAuth.getInstance();
 
@@ -87,37 +72,9 @@ public class homeFrag extends Fragment {
                     "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");
             mDB=firebaseDatabase.getReference();
 
-
-            mDB.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if(task.isSuccessful()){
-                        for(DataSnapshot childSnapShot: task.getResult().getChildren()){
-                            b64Emails.add(task.getResult().getValue().toString());
-                        }
-                    }
-                }
-            });
-            for(String b64Email:b64Emails){
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if(task.isSuccessful()){
-                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        picArrayList.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue())));
-                                    }
-
-                                    adapter.notifyDataSetChanged();
-                                }
-                            }
-                        });
-            }
-
+            //Nhận user
+            user=getArguments().getParcelable("fb_user");
         }
-
     }
 
     @Override
@@ -125,12 +82,78 @@ public class homeFrag extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view= inflater.inflate(R.layout.fragment_home, container, false);
-//        GeneralFunc.str2Base64()
-        recyclerView=view.findViewById(R.id.recycleview);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL));
-        adapter = new HomeAdapter(picArrayList,view.getContext());
-        recyclerView.setAdapter(adapter);
+
+        GridView gridView=view.findViewById(R.id.gv_homeFrag_listPics);
+        String b64Email=GeneralFunc.str2Base64(user.getEmail());
+        view.findViewById(R.id.pb_homeFrag).setVisibility(View.VISIBLE);
+
+        //Lấy danh sách ảnh ngẫu nhiên trừ ảnh của tài khoản
+        mDB.get().addOnCompleteListener(
+                new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if(task.isSuccessful()){
+                            ArrayList<objectPic> list=new ArrayList<objectPic>();
+                            int picCount=0;
+
+                            for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                String ownerB64Email=childSnapShot.getKey();
+                                if(ownerB64Email.equals(b64Email)) continue;
+                                Random random = new Random();
+                                for(DataSnapshot childSnapShot1 : childSnapShot.child("pics")
+                                        .getChildren()){
+                                    if(random.nextBoolean())continue;
+                                    list.add(new objectPic(childSnapShot1.getKey(),
+                                            String.valueOf(childSnapShot1.child("data").getValue()),
+                                            String.valueOf(childSnapShot1.child("name").getValue()),
+                                            String.valueOf(childSnapShot1.child("tags").getValue()),
+                                            ownerB64Email));
+                                    picCount++;
+                                    if(picCount==50)break;
+                                }
+                                if (picCount==50)break;
+                            }
+
+                            PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,list);
+                            gridView.setAdapter(picAdapter);
+
+                            view.findViewById(R.id.pb_homeFrag).setVisibility(View.GONE);
+                        }
+                    }
+                });
+
+        //Sự kiện click ảnh
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View imgView, int position, long id) {
+                mDB.child(b64Email).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        try{
+                            Intent intent=new Intent(view.getContext(),viewPic.class);
+                            intent.putExtra("user",new objectUser(user.getEmail(),false,
+                                    task.getResult().child("profile_pic").getValue().toString(),
+                                    task.getResult().child("username").getValue().toString()));
+                            intent.putExtra("viewPic",(objectPic)imgView.findViewById(
+                                    R.id.iv_itemPic).getTag());
+
+                            startActivity(intent);
+                        }catch (Exception e){ //Lỗi do kích thước ảnh lớn
+                            Intent intent=new Intent(view.getContext(),viewPic.class);
+                            intent.putExtra("user",new objectUser(user.getEmail(),false,
+                                    task.getResult().child("profile_pic").getValue().toString(),
+                                    task.getResult().child("username").getValue().toString()));
+                            objectPic pic=(objectPic)imgView.findViewById(R.id.iv_itemPic).getTag();
+                            intent.putExtra("viewPicMin",new objectPic(pic.getKey(),
+                                    pic.getName(),pic.getStrHashtags(),pic.getB64EmailOwner()));
+
+                            startActivity(intent);
+                        }
+                    }
+                });
+            }
+        });
+
 
         return view;
     }

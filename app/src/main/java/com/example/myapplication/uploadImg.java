@@ -84,6 +84,8 @@ public class uploadImg extends AppCompatActivity {
                         databaseReference=mDB.child(b64Email).child("pics")
                                 .push();
                         databaseReference.child("data").setValue(GeneralFunc.zipImg2Base64(
+                                ((BitmapDrawable)binding.ivUploadImg.getDrawable()).getBitmap(),0));
+                        databaseReference.child("full").setValue(GeneralFunc.zipImg2Base64(
                                 ((BitmapDrawable)binding.ivUploadImg.getDrawable()).getBitmap()));
                     }
                     catch (Exception e){

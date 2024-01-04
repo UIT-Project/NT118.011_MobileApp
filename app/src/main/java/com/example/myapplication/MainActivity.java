@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,48 +47,20 @@ public class MainActivity extends AppCompatActivity {
     DatabaseReference mDB;
     FirebaseUser user;
     ActivityMainBinding binding;
-
-    String string="";
-
+    ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //Khởi tạo act
         super.onCreate(savedInstanceState);
 
+        //Khởi tạo giao diện
+        binding=ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
         //Yêu cầu cấp quyền
         GeneralFunc.askPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         GeneralFunc.askPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE);
         GeneralFunc.askPermission(this, Manifest.permission.ACCESS_NETWORK_STATE);
-
-        //Kết nối giao diện
-        binding=ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        replaceFrag(new homeFrag());
-
-        //Kết nối các fragment với menu item
-        binding.bottomNavView.setOnItemSelectedListener(item -> {
-            if(item.getItemId()==R.id.bn_i_home){
-                replaceFrag(new homeFrag());
-            }
-            if(item.getItemId()==R.id.bn_i_search){
-                replaceFrag(new searchFrag());
-            }
-            if(item.getItemId()==R.id.bn_i_profile){
-                binding.pbMain.setVisibility(View.VISIBLE);
-                replaceFrag(profileFrag.newInstance(user));
-            }
-
-            return true;
-        });
-
-        //Tên Shared Preferences file
-        String PREF_NAME = getString(R.string.share_pref_name);
-
-        //Shared Preferences
-        SharedPreferences preferences=this.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        //editor.clear();
-        //editor.apply();
 
         //Kết nối FB Realtime DB
         firebaseDatabase=FirebaseDatabase.getInstance(
@@ -99,6 +72,15 @@ public class MainActivity extends AppCompatActivity {
 
         //Nhận người dùng hiện tại đăng nhập
         user=firebaseAuth.getCurrentUser();
+
+        //Tên Shared Preferences file
+        String PREF_NAME = getString(R.string.share_pref_name);
+
+        //Shared Preferences
+        SharedPreferences preferences=this.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        //editor.clear();
+        //editor.apply();
 
         //Không có người dùng thì đăng nhập
         if(user==null){
@@ -128,6 +110,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            //Kết nối các fragment với menu item
+            replaceFrag(homeFrag.newInstance(user));
+            binding.bottomNavView.setOnItemSelectedListener(item -> {
+                if(item.getItemId()==R.id.bn_i_home){
+                    replaceFrag(homeFrag.newInstance(user));
+                }
+                if(item.getItemId()==R.id.bn_i_search){
+                    replaceFrag(new searchFrag());
+                }
+                if(item.getItemId()==R.id.bn_i_profile){
+                    replaceFrag(profileFrag.newInstance(user));
+                }
+
+                return true;
+            });
         }
 
     }

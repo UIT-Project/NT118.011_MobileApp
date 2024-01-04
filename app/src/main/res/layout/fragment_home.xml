@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".homeFrag">
-
-    <!-- TODO: Update blank fragment layout -->
-    <androidx.recyclerview.widget.RecyclerView
+<ProgressBar
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/pb_homeFrag"/>
+    <GridView
+        android:id="@+id/gv_homeFrag_listPics"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/recycleview"
-        android:paddingStart="0dp"
-        android:paddingEnd="15dp"
-        android:paddingBottom="15dp"/>
-
-</RelativeLayout>
+        android:numColumns="2"
+        android:orientation="vertical"
+        />
+</FrameLayout>

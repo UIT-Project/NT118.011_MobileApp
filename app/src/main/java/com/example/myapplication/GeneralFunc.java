@@ -80,7 +80,29 @@ public class GeneralFunc {
         }
     }
 
-    //Nén ảnh đại diện mặc định thành base 64
+    //Nén img thành base 64 string với input là bitmap và quality
+    public static String zipImg2Base64(Bitmap bitmap, int quality){
+        try(ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
+            DeflaterOutputStream deflaterOutputStream=new DeflaterOutputStream(byteArrayOutputStream)){
+
+            //Bitmap bitmap= BitmapFactory.decodeFile(imgPath,options);
+            ByteArrayOutputStream byteArrayOutputStream1=new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality,byteArrayOutputStream1);
+            byte[] bytes=byteArrayOutputStream1.toByteArray();
+            byteArrayOutputStream1.close();
+
+            deflaterOutputStream.write(bytes);
+            deflaterOutputStream.close();
+
+            String ret= new String(Base64.getEncoder().encode(byteArrayOutputStream.toByteArray()));
+            byteArrayOutputStream.close();
+            return ret;
+        } catch (IOException e){
+            return "";
+        }
+    }
+
+        //Nén ảnh đại diện mặc định thành base 64
     public static String defaultImg2Base64(Context context){
         try(ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
             DeflaterOutputStream deflaterOutputStream=new
