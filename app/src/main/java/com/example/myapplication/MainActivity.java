@@ -106,7 +106,9 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent=new Intent(MainActivity.this, login.class);
                         startActivity(intent);
                         finish();
+                        return;
                     }
+
                 }
             });
 
@@ -117,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     replaceFrag(homeFrag.newInstance(user));
                 }
                 if(item.getItemId()==R.id.bn_i_search){
-                    replaceFrag(new searchFrag());
+                    replaceFrag(searchFrag.newInstance(user));
                 }
                 if(item.getItemId()==R.id.bn_i_profile){
                     replaceFrag(profileFrag.newInstance(user));

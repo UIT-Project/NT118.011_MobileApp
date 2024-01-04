@@ -129,7 +129,7 @@ public class viewUser extends AppCompatActivity {
                     });
 
             //Kiểm tra đã theo dõi chưa
-            mDB.child(user.getB64Email()).child("follower").child(targetUserB64Email).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            mDB.child(user.getB64Email()).child("follow").child(targetUserB64Email).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<DataSnapshot> task) {
                     if(task.isSuccessful()){

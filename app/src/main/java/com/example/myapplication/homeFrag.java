@@ -40,8 +40,6 @@ import java.util.Random;
  * create an instance of this fragment.
  */
 public class homeFrag extends Fragment {
-    RecyclerView recyclerView;
-    ArrayList<objectPic> picArrayList;
     FirebaseAuth firebaseAuth;
     FirebaseDatabase firebaseDatabase;
     DatabaseReference mDB;

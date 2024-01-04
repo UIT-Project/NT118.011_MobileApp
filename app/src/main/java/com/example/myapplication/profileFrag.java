@@ -156,6 +156,7 @@ public class profileFrag extends Fragment {
                     gridView.setAdapter(picAdapter);
 
                     ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
+                    gridView.setVisibility(View.VISIBLE);
                 }
             }
         });

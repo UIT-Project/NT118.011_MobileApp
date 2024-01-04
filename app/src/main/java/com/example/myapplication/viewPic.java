@@ -227,6 +227,19 @@ public class viewPic extends AppCompatActivity {
                                                     R.color.gray));
                                     binding.bViewPicFollow.setTag("0");
                                 }
+
+                                //Cập thật số người theo dõi
+                                mDB.child(pic.getB64EmailOwner()).child("follower").get().addOnCompleteListener(
+                                        new OnCompleteListener<DataSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                if(task.isSuccessful()){
+                                                    binding.tvViewPicNumberOfFollower.setText(String.valueOf(task.getResult()
+                                                            .getChildrenCount())+" người theo dõi");
+                                                }
+                                            }
+                                        });
+
                             }
 
                             //Lựa chọn tải về
@@ -306,6 +319,18 @@ public class viewPic extends AppCompatActivity {
                                         R.color.gray));
                         binding.bViewPicFollow.setTag("0");
                     }
+
+                    //Cập nhật lại số người theo dõi
+                    mDB.child(pic.getB64EmailOwner()).child("follower").get().addOnCompleteListener(
+                            new OnCompleteListener<DataSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                    if(task.isSuccessful()){
+                                        binding.tvViewPicNumberOfFollower.setText(String.valueOf(task.getResult()
+                                                .getChildrenCount())+" người theo dõi");
+                                    }
+                                }
+                            });
                 }
             });
 
@@ -332,6 +357,19 @@ public class viewPic extends AppCompatActivity {
                                 R.drawable.baseline_favorite_border_24));
                         binding.ibViewPicLove.setTag("0");
                     }
+
+                    //Cập nhật lại số love
+                    mDB.child(pic.getB64EmailOwner()).child("pics").child(pic.getKey())
+                            .child("lover").get().addOnCompleteListener(
+                                    new OnCompleteListener<DataSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                            if(task.isSuccessful()){
+                                                binding.tvViewPicNumberOfLove.setText(String.valueOf(task.getResult()
+                                                        .getChildrenCount()));
+                                            }
+                                        }
+                                    });
                 }
             });
 
