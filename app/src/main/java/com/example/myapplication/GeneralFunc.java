@@ -58,28 +58,6 @@ public class GeneralFunc {
         return new String(bytes);
     }
 
-    //Nén img thành base 64 string với input là bitmap
-    public static String zipImg2Base64(Bitmap bitmap){
-        try(ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
-            DeflaterOutputStream deflaterOutputStream=new DeflaterOutputStream(byteArrayOutputStream)){
-
-            //Bitmap bitmap= BitmapFactory.decodeFile(imgPath,options);
-            ByteArrayOutputStream byteArrayOutputStream1=new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100,byteArrayOutputStream1);
-            byte[] bytes=byteArrayOutputStream1.toByteArray();
-            byteArrayOutputStream1.close();
-
-            deflaterOutputStream.write(bytes);
-            deflaterOutputStream.close();
-
-            String ret= new String(Base64.getEncoder().encode(byteArrayOutputStream.toByteArray()));
-            byteArrayOutputStream.close();
-            return ret;
-        } catch (IOException e){
-            return "";
-        }
-    }
-
     //Nén img thành base 64 string với input là bitmap và quality
     public static String zipImg2Base64(Bitmap bitmap, int quality){
         try(ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();

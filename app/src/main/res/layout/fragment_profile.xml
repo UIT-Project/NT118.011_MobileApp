@@ -43,12 +43,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:cardCornerRadius="48dp"
-            android:layout_marginTop="10px"
+            android:layout_marginTop="6dp"
             android:id="@+id/cv_profileFrag_profilePic">
             <ImageView
                 android:id="@+id/iv_profileFrag_profilePic"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                android:src="@drawable/user"/>
         </androidx.cardview.widget.CardView>
         <TextView
             android:layout_width="wrap_content"

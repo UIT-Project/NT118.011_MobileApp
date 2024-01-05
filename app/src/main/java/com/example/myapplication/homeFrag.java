@@ -152,7 +152,6 @@ public class homeFrag extends Fragment {
             }
         });
 
-
         return view;
     }
 }

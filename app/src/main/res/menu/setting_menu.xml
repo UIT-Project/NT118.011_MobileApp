@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-<item android:id="@+id/setting_i_logout"
+    <item android:id="@+id/setting_i_editAcc"
+        android:title="Chỉnh sửa thông tin tài khoản"/>
+    <item android:id="@+id/setting_i_changePass"
+        android:title="Đổi mật khẩu"/>
+    <item android:id="@+id/setting_i_logout"
     android:title="Đăng xuất"/>
 </menu>

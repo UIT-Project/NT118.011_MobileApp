@@ -106,14 +106,31 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent=new Intent(MainActivity.this, login.class);
                         startActivity(intent);
                         finish();
-                        return;
                     }
-
                 }
             });
 
             //Kết nối các fragment với menu item
-            replaceFrag(homeFrag.newInstance(user));
+            Intent intent=getIntent();
+            if(intent!=null){
+                String frag=intent.getStringExtra("main_frag");
+                if(frag!=null){
+                    if(frag.equals("home")){
+                        binding.bottomNavView.findViewById(R.id.bn_i_home).setSelected(true);
+                        replaceFrag(homeFrag.newInstance(user));
+                    }
+                    if(frag.equals("search")){
+                        binding.bottomNavView.findViewById(R.id.bn_i_search).setSelected(true);
+                        replaceFrag(searchFrag.newInstance(user));
+                    }
+                    if(frag.equals("profile")){
+                        binding.bottomNavView.setSelectedItemId(R.id.bn_i_profile);
+                        replaceFrag(profileFrag.newInstance(user));
+                    }
+                }else {
+                    replaceFrag(homeFrag.newInstance(user));
+                }
+            }
             binding.bottomNavView.setOnItemSelectedListener(item -> {
                 if(item.getItemId()==R.id.bn_i_home){
                     replaceFrag(homeFrag.newInstance(user));

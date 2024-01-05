@@ -121,12 +121,11 @@
             />
         <EditText
             android:id="@+id/et_register_password"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="@id/tv_register_password"
             app:layout_constraintTop_toBottomOf="@id/tv_register_password"
             app:layout_constraintEnd_toStartOf="@id/iv_register_password"
-            android:layout_marginLeft="20dp"
             android:hint="Nhập mật khẩu ít nhất 8 ký tự"
             android:password="true"
             />
@@ -161,11 +160,11 @@
             />
         <EditText
             android:id="@+id/et_register_repassword"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="@id/tv_register_repassword"
             app:layout_constraintTop_toBottomOf="@id/tv_register_repassword"
-            android:layout_marginLeft="20dp"
+            app:layout_constraintEnd_toStartOf="@id/iv_register_repassword"
             android:hint="Nhập lại mật khẩu"
             android:password="true"
             />
@@ -183,7 +182,9 @@
             android:layout_height="40dp"
             android:src="@drawable/eye_close"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_register_repassword" />
+            app:layout_constraintStart_toEndOf="@id/et_register_repassword"
+            app:layout_constraintBottom_toBottomOf="@id/et_register_repassword"
+            />
 
         <Button
             android:id="@+id/b_register"

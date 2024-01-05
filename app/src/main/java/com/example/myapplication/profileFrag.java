@@ -115,6 +115,7 @@ public class profileFrag extends Fragment {
         ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
         TextView tv_username=view.findViewById(R.id.tv_profileFrag_username);
         ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.VISIBLE);
+        ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(View.GONE);
 
         //Tải ảnh đại diện
         mDB.child(b64Email).child(view.getContext().getString(R.string.profile_pic)).get()
@@ -123,6 +124,8 @@ public class profileFrag extends Fragment {
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 userPic.setImageBitmap(GeneralFunc.unzipBase64ToImg(String.valueOf(
                         task.getResult().getValue())));
+                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                        View.VISIBLE);
             }
         });
 
@@ -156,6 +159,7 @@ public class profileFrag extends Fragment {
                     gridView.setAdapter(picAdapter);
 
                     ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
+
                     gridView.setVisibility(View.VISIBLE);
                 }
             }
@@ -183,6 +187,22 @@ public class profileFrag extends Fragment {
                             getActivity().startActivity(intent);
                             getActivity().finish();
                         }
+                        if(item.getItemId()==R.id.setting_i_editAcc){
+                            Intent intent=new Intent(getActivity().getApplicationContext(),
+                                    updateUser.class);
+                            intent.putExtra("user",new objectUser(b64Email, true,
+                                    GeneralFunc.zipImg2Base64(((BitmapDrawable)((ImageView)view.
+                                    findViewById(R.id.iv_profileFrag_profilePic)).getDrawable())
+                                    .getBitmap(),100), tv_username.getText().toString()));
+                            getActivity().startActivity(intent);
+                            getActivity().finish();
+                        }
+                        if(item.getItemId()==R.id.setting_i_changePass){
+                            Intent intent=new Intent(getActivity().getApplicationContext(),
+                                    updatePass.class);
+                            getActivity().startActivity(intent);
+                            getActivity().finish();
+                        }
                         return true;
                     }
                 });
@@ -192,7 +212,8 @@ public class profileFrag extends Fragment {
             }
         });
 
-        //Chọn ảnh
+
+        //Chọn ảnh tải lên
         ((Button)view.findViewById(R.id.b_profileFrag_add)).setOnClickListener(
                 new View.OnClickListener() {
             @Override

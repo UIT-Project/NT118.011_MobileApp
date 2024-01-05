@@ -86,7 +86,7 @@ public class uploadImg extends AppCompatActivity {
                         databaseReference.child("data").setValue(GeneralFunc.zipImg2Base64(
                                 ((BitmapDrawable)binding.ivUploadImg.getDrawable()).getBitmap(),0));
                         databaseReference.child("full").setValue(GeneralFunc.zipImg2Base64(
-                                ((BitmapDrawable)binding.ivUploadImg.getDrawable()).getBitmap()));
+                                ((BitmapDrawable)binding.ivUploadImg.getDrawable()).getBitmap(),100));
                     }
                     catch (Exception e){
                         Toast.makeText(uploadImg.this,"Tải ảnh lên thất bại",
