@@ -8,14 +8,20 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.CountDownTimer;
 import android.os.Looper;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -32,6 +38,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
@@ -174,4 +181,99 @@ public class GeneralFunc {
         return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
+    //Tạo item pic
+    public static CardView itemPic(Context context, objectPic pic){
+        CardView cardView=new CardView(context);
+        cardView.setId(CardView.generateViewId());
+        ConstraintLayout.LayoutParams cardParams = new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.MATCH_CONSTRAINT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(18, 18, 18, 18);
+        cardView.setLayoutParams(cardParams);
+        cardView.setRadius(48);
+
+        ImageView imageView = new ImageView(context);
+        ViewGroup.LayoutParams imageParams = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        imageView.setLayoutParams(imageParams);
+        imageView.setAdjustViewBounds(true);
+        imageView.setImageBitmap(unzipBase64ToImg(pic.getData()));
+        imageView.setTag(pic);
+        imageView.setId(R.id.iv_itemPic);
+
+        cardView.addView(imageView);
+        cardView.setTag((float)(imageView.getDrawable().getIntrinsicHeight()/
+                imageView.getDrawable().getIntrinsicWidth()));
+
+        return cardView;
+    }
+
+    //Đưa item vào giao diện
+    public static void items2Layout(ConstraintLayout constraintLayout, ArrayList<CardView> cardViewArrayList, View view,
+                                    View.OnClickListener onItemClickListener){
+        float height0=0, height1=0;
+        int idLast0= ConstraintSet.PARENT_ID, idLast1=ConstraintSet.PARENT_ID;
+
+        for(int i=0;i<cardViewArrayList.size();i++){
+            //Cập nhật tổng chiều cao
+            if(i>0) {
+                if(height0<=height1){
+                    height0+=(float)constraintLayout.getChildAt(i-1).getTag();
+                }else {
+                    height1+=(float)constraintLayout.getChildAt(i-1).getTag();
+                }
+            }
+
+            CardView cardView=cardViewArrayList.get(i);
+
+            //Sự kiện click ảnh
+            cardView.setOnClickListener(onItemClickListener);
+
+            constraintLayout.addView(cardView);
+
+            ConstraintSet constraintSet=new ConstraintSet();
+            constraintSet.clone(constraintLayout);
+
+            //Thiết lập các ràng buộc
+            if(height0<=height1){
+                constraintSet.connect(cardView.getId(), ConstraintSet.START,
+                        ConstraintSet.PARENT_ID, ConstraintSet.START);
+            }else {
+                constraintSet.connect(cardView.getId(), ConstraintSet.END,
+                        ConstraintSet.PARENT_ID, ConstraintSet.END);
+                constraintSet.connect(cardView.getId(), ConstraintSet.START,
+                        idLast0, ConstraintSet.END);
+
+                constraintSet.connect(idLast0, ConstraintSet.END,
+                        cardView.getId(), ConstraintSet.START);
+            }
+
+            if(i<2){
+                constraintSet.connect(cardView.getId(), ConstraintSet.TOP,
+                        ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            }else {
+                if(height0<=height1){
+                    constraintSet.connect(cardView.getId(), ConstraintSet.END,
+                            idLast1, ConstraintSet.START);
+
+                    constraintSet.connect(cardView.getId(), ConstraintSet.TOP,
+                            idLast0, ConstraintSet.BOTTOM);
+                } else{
+                    constraintSet.connect(cardView.getId(), ConstraintSet.TOP,
+                            idLast1, ConstraintSet.BOTTOM);
+                }
+            }
+
+            if(height0<=height1){
+                idLast0=cardView.getId();
+            }else {
+                idLast1=cardView.getId();
+            }
+
+            constraintSet.applyTo(constraintLayout);
+        }
+    }
 }

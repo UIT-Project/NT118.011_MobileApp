@@ -15,7 +15,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -111,7 +113,6 @@ public class profileFrag extends Fragment {
 
         String b64Email=GeneralFunc.str2Base64(user.getEmail());
 
-        GridView gridView=view.findViewById(R.id.gv_profileFrag_listPics);
         ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
         TextView tv_username=view.findViewById(R.id.tv_profileFrag_username);
         ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.VISIBLE);
@@ -147,20 +148,49 @@ public class profileFrag extends Fragment {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 if(task.isSuccessful()){
-                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
+                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
+                                childSnapShot.getKey(),
+                                String.valueOf(childSnapShot.child("data").getValue()),
                                 String.valueOf(childSnapShot.child("name").getValue()),
-                                String.valueOf(childSnapShot.child("tags").getValue()),b64Email));
+                                String.valueOf(childSnapShot.child("tags").getValue()),
+                                b64Email));
+                        cardViewArrayList.add(cardView);
                     }
 
-                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,list);
-                    gridView.setAdapter(picAdapter);
+                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
+                            cardViewArrayList,view,new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                    vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                            vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                            vpImg.setTag(selectedImg.getTag());
+
+                            ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                    ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                            ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                    tv_username.getText().toString());
+
+                            objectPic pic=(objectPic)selectedImg.getTag();
+                            if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                        "Tên ảnh: "+pic.getName());
+                            }
+                            if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                        "Tags: "+pic.getStrHashtags());
+                            }
+
+                            ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                                    View.GONE);
+                            ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
+                                    View.VISIBLE);
+                        }
+                    });
 
                     ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
-
-                    gridView.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -221,37 +251,6 @@ public class profileFrag extends Fragment {
                 Intent intent=new Intent(Intent.ACTION_PICK, MediaStore.Images.Media
                         .EXTERNAL_CONTENT_URI);
                 takeImg.launch(intent);
-            }
-        });
-
-        //Sự kiện click ảnh
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View imgView, int position, long id) {
-                ImageView selectedImg=imgView.findViewById(R.id.iv_itemPic),
-                        vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
-                vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                vpImg.setTag(selectedImg.getTag());
-
-                ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
-                        ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(tv_username
-                        .getText().toString());
-
-                objectPic pic=(objectPic)selectedImg.getTag();
-                if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
-                            "Tên ảnh: "+pic.getName());
-                }
-                if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
-                            "Tags: "+pic.getStrHashtags());
-                }
-
-                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                        View.GONE);
-                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
-                        View.VISIBLE);
             }
         });
 
@@ -362,18 +361,49 @@ public class profileFrag extends Fragment {
                             @Override
                             public void onComplete(@NonNull Task<DataSnapshot> task) {
                                 if(task.isSuccessful()){
-                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
+                                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
                                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
+                                                childSnapShot.getKey(),
+                                                String.valueOf(childSnapShot.child("data").getValue()),
                                                 String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue()),b64Email));
+                                                String.valueOf(childSnapShot.child("tags").getValue()),
+                                                b64Email));
+                                        cardViewArrayList.add(cardView);
                                     }
 
-                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                                            list);
-                                    gridView.setAdapter(
-                                            picAdapter);
+                                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
+                                            cardViewArrayList,view,new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                                    vpImg.setTag(selectedImg.getTag());
+
+                                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                                            tv_username.getText().toString());
+
+                                                    objectPic pic=(objectPic)selectedImg.getTag();
+                                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                                                "Tên ảnh: "+pic.getName());
+                                                    }
+                                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                                                "Tags: "+pic.getStrHashtags());
+                                                    }
+
+                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                                                            View.GONE);
+                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
+                                                            View.VISIBLE);
+                                                }
+                                            });
+
+                                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
                                 }
                             }
                         });
@@ -389,35 +419,49 @@ public class profileFrag extends Fragment {
                             @Override
                             public void onComplete(@NonNull Task<DataSnapshot> task) {
                                 if(task.isSuccessful()){
-                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
+                                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
                                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        objectPic pic=new objectPic(childSnapShot.getKey(),
-                                                String.valueOf(childSnapShot.child("data")
-                                                        .getValue()),
-                                                String.valueOf(childSnapShot.child("name")
-                                                        .getValue()),
-                                                String.valueOf(childSnapShot.child("tags")
-                                                        .getValue()),b64Email);
-                                        list.add(pic);
-
-                                        ImageView imageView = view.findViewById(
-                                                R.id.iv_profileFrag_vP_img);
-                                        if(imageView.getTag()!=null){
-                                            if(((objectPic)imageView.getTag()).getKey().equals(
-                                                    pic.getKey())){
-                                                imageView.setTag(pic);
-                                                ((TextView)view.findViewById(
-                                                        R.id.tv_profileFrag_vP_namePic)).setText(
-                                                        "Tên ảnh: "+pic.getName());
-                                            }
-                                        }
+                                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
+                                                childSnapShot.getKey(),
+                                                String.valueOf(childSnapShot.child("data").getValue()),
+                                                String.valueOf(childSnapShot.child("name").getValue()),
+                                                String.valueOf(childSnapShot.child("tags").getValue()),
+                                                b64Email));
+                                        cardViewArrayList.add(cardView);
                                     }
 
-                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                                            list);
-                                    gridView.setAdapter(
-                                            picAdapter);
+                                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
+                                            cardViewArrayList,view,new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                                    vpImg.setTag(selectedImg.getTag());
+
+                                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                                            tv_username.getText().toString());
+
+                                                    objectPic pic=(objectPic)selectedImg.getTag();
+                                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                                                "Tên ảnh: "+pic.getName());
+                                                    }
+                                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                                                "Tags: "+pic.getStrHashtags());
+                                                    }
+
+                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                                                            View.GONE);
+                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
+                                                            View.VISIBLE);
+                                                }
+                                            });
+
+                                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
                                 }
                             }
                         });
@@ -436,18 +480,49 @@ public class profileFrag extends Fragment {
                             @Override
                             public void onComplete(@NonNull Task<DataSnapshot> task) {
                                 if(task.isSuccessful()){
-                                    ArrayList<objectPic> list=new ArrayList<objectPic>();
-
+                                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
                                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        list.add(new objectPic(childSnapShot.getKey(),String.valueOf(childSnapShot.child("data").getValue()),
+                                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
+                                                childSnapShot.getKey(),
+                                                String.valueOf(childSnapShot.child("data").getValue()),
                                                 String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue()),b64Email));
+                                                String.valueOf(childSnapShot.child("tags").getValue()),
+                                                b64Email));
+                                        cardViewArrayList.add(cardView);
                                     }
 
-                                    PicAdapter picAdapter=new PicAdapter(view.getContext(),R.layout.item_pic,
-                                            list);
-                                    gridView.setAdapter(
-                                            picAdapter);
+                                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
+                                            cardViewArrayList,view,new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                                    vpImg.setTag(selectedImg.getTag());
+
+                                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                                            tv_username.getText().toString());
+
+                                                    objectPic pic=(objectPic)selectedImg.getTag();
+                                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                                                "Tên ảnh: "+pic.getName());
+                                                    }
+                                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                                                "Tags: "+pic.getStrHashtags());
+                                                    }
+
+                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                                                            View.GONE);
+                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
+                                                            View.VISIBLE);
+                                                }
+                                            });
+
+                                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
                                 }
                             }
                         });
