@@ -123,6 +123,10 @@ public class MainActivity extends AppCompatActivity {
                         binding.bottomNavView.findViewById(R.id.bn_i_search).setSelected(true);
                         replaceFrag(searchFrag.newInstance(user));
                     }
+                    if(frag.equals("care")){
+                        binding.bottomNavView.setSelectedItemId(R.id.bn_i_care);
+                        replaceFrag(careFrag.newInstance(user));
+                    }
                     if(frag.equals("profile")){
                         binding.bottomNavView.setSelectedItemId(R.id.bn_i_profile);
                         replaceFrag(profileFrag.newInstance(user));
@@ -137,6 +141,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if(item.getItemId()==R.id.bn_i_search){
                     replaceFrag(searchFrag.newInstance(user));
+                }
+                if(item.getItemId()==R.id.bn_i_care){
+                    replaceFrag(careFrag.newInstance(user));
                 }
                 if(item.getItemId()==R.id.bn_i_profile){
                     replaceFrag(profileFrag.newInstance(user));

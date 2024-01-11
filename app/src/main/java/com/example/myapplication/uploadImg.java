@@ -99,6 +99,13 @@ public class uploadImg extends AppCompatActivity {
                     databaseReference.child("tags").setValue(binding.etUploadImgTags.getText()
                             .toString().trim());
 
+                    mDB.child("fast").child(b64Email).child("pics")
+                            .child(databaseReference.getKey()).child("name")
+                            .setValue(binding.etUploadImgName.getText().toString().trim());
+                    mDB.child("fast").child(b64Email).child("pics")
+                            .child(databaseReference.getKey()).child("tags")
+                            .setValue(binding.etUploadImgTags.getText().toString().trim());
+
                     finish();
                 }
             });

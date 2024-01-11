@@ -168,6 +168,9 @@ public class register extends AppCompatActivity {
                                     mDB.child(b64Email)
                                             .child(getString(R.string.profile_pic)).setValue(defUserImg);
 
+                                    mDB.child("fast").child(b64Email)
+                                            .child("username").setValue(username);
+
                                     //Kết thúc giao diện chờ
                                     progressBar.setVisibility(View.GONE);
                                     reentrantLock.unlock();

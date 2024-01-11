@@ -13,10 +13,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.CountDownTimer;
 import android.os.Looper;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.cardview.widget.CardView;
@@ -40,6 +42,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -182,42 +185,62 @@ public class GeneralFunc {
     }
 
     //Tạo item pic
-    public static CardView itemPic(Context context, objectPic pic){
-        CardView cardView=new CardView(context);
-        cardView.setId(CardView.generateViewId());
-        ConstraintLayout.LayoutParams cardParams = new ConstraintLayout.LayoutParams(
+    public static LinearLayout itemPic(Context context, objectPic pic){
+        LinearLayout linearLayout=(LinearLayout) ((LayoutInflater) context.getSystemService(
+                Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.item_pic,null);
+        linearLayout.setId(LinearLayout.generateViewId());
+        ConstraintLayout.LayoutParams layoutParams=new ConstraintLayout.LayoutParams(
                 ConstraintLayout.LayoutParams.MATCH_CONSTRAINT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-        );
-        cardParams.setMargins(18, 18, 18, 18);
-        cardView.setLayoutParams(cardParams);
-        cardView.setRadius(48);
-
-        ImageView imageView = new ImageView(context);
-        ViewGroup.LayoutParams imageParams = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        imageView.setLayoutParams(imageParams);
-        imageView.setAdjustViewBounds(true);
+        linearLayout.setLayoutParams(layoutParams);
+
+        CardView cardView=(CardView) linearLayout.getChildAt(0);
+
+        ImageView imageView = (ImageView) cardView.getChildAt(0);
         imageView.setImageBitmap(unzipBase64ToImg(pic.getData()));
         imageView.setTag(pic);
-        imageView.setId(R.id.iv_itemPic);
 
-        cardView.addView(imageView);
-        cardView.setTag((float)(imageView.getDrawable().getIntrinsicHeight()/
+        linearLayout.setTag((float)(imageView.getDrawable().getIntrinsicHeight()/
                 imageView.getDrawable().getIntrinsicWidth()));
 
-        return cardView;
+        return linearLayout;
     }
 
-    //Đưa item vào giao diện
-    public static void items2Layout(ConstraintLayout constraintLayout, ArrayList<CardView> cardViewArrayList, View view,
+    //Tạo item user
+    public static LinearLayout itemUser(Context context, objectUser user){
+        LinearLayout linearLayout=(LinearLayout)((LayoutInflater) context.getSystemService(
+                Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.item_user,null);
+        linearLayout.setId(LinearLayout.generateViewId());
+        ConstraintLayout.LayoutParams layoutParams=new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.MATCH_CONSTRAINT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        linearLayout.setLayoutParams(layoutParams);
+
+        CardView cardView=(CardView) linearLayout.getChildAt(0);
+        ImageView imageView=(ImageView)cardView.getChildAt(0);
+
+        LinearLayout linearLayout1=(LinearLayout) linearLayout.getChildAt(1);
+        TextView name=(TextView) linearLayout1.getChildAt(0),
+                email=(TextView)linearLayout1.getChildAt(1);
+
+        imageView.setImageBitmap(unzipBase64ToImg(user.getDataUserPic()));
+        imageView.setTag(user);
+        name.setText(user.getUsername());
+        email.setText(base64ToStr(user.getB64Email()));
+
+        return linearLayout;
+    }
+
+    //Đưa item ảnh vào giao diện
+    public static void items2Layout(ConstraintLayout constraintLayout,
+                                    ArrayList<LinearLayout> linearLayoutArrayList,
                                     View.OnClickListener onItemClickListener){
         float height0=0, height1=0;
         int idLast0= ConstraintSet.PARENT_ID, idLast1=ConstraintSet.PARENT_ID;
 
-        for(int i=0;i<cardViewArrayList.size();i++){
+        for(int i=0;i<linearLayoutArrayList.size();i++){
             //Cập nhật tổng chiều cao
             if(i>0) {
                 if(height0<=height1){
@@ -227,53 +250,92 @@ public class GeneralFunc {
                 }
             }
 
-            CardView cardView=cardViewArrayList.get(i);
+            LinearLayout linearLayout=linearLayoutArrayList.get(i);
 
             //Sự kiện click ảnh
-            cardView.setOnClickListener(onItemClickListener);
+            linearLayout.setOnClickListener(onItemClickListener);
 
-            constraintLayout.addView(cardView);
+            constraintLayout.addView(linearLayout);
 
             ConstraintSet constraintSet=new ConstraintSet();
             constraintSet.clone(constraintLayout);
 
             //Thiết lập các ràng buộc
             if(height0<=height1){
-                constraintSet.connect(cardView.getId(), ConstraintSet.START,
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.START,
                         ConstraintSet.PARENT_ID, ConstraintSet.START);
             }else {
-                constraintSet.connect(cardView.getId(), ConstraintSet.END,
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.END,
                         ConstraintSet.PARENT_ID, ConstraintSet.END);
-                constraintSet.connect(cardView.getId(), ConstraintSet.START,
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.START,
                         idLast0, ConstraintSet.END);
 
                 constraintSet.connect(idLast0, ConstraintSet.END,
-                        cardView.getId(), ConstraintSet.START);
+                        linearLayout.getId(), ConstraintSet.START);
             }
 
             if(i<2){
-                constraintSet.connect(cardView.getId(), ConstraintSet.TOP,
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
                         ConstraintSet.PARENT_ID, ConstraintSet.TOP);
             }else {
                 if(height0<=height1){
-                    constraintSet.connect(cardView.getId(), ConstraintSet.END,
+                    constraintSet.connect(linearLayout.getId(), ConstraintSet.END,
                             idLast1, ConstraintSet.START);
 
-                    constraintSet.connect(cardView.getId(), ConstraintSet.TOP,
+                    constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
                             idLast0, ConstraintSet.BOTTOM);
                 } else{
-                    constraintSet.connect(cardView.getId(), ConstraintSet.TOP,
+                    constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
                             idLast1, ConstraintSet.BOTTOM);
                 }
             }
 
             if(height0<=height1){
-                idLast0=cardView.getId();
+                idLast0=linearLayout.getId();
             }else {
-                idLast1=cardView.getId();
+                idLast1=linearLayout.getId();
             }
 
             constraintSet.applyTo(constraintLayout);
         }
+
+        constraintLayout.setTag(R.id.height0,height0);
+        constraintLayout.setTag(R.id.height1,height1);
+
     }
+
+    //Đưa item user vào giao diện
+    public static void itemsUser2Layout(ConstraintLayout constraintLayout,
+                                    ArrayList<LinearLayout> linearLayoutArrayList,
+                                    View.OnClickListener onItemClickListener){
+
+        for(int i=0;i<linearLayoutArrayList.size();i++){
+            LinearLayout linearLayout=linearLayoutArrayList.get(i);
+
+            //Sự kiện click tk
+            linearLayout.setOnClickListener(onItemClickListener);
+
+            constraintLayout.addView(linearLayout);
+
+            ConstraintSet constraintSet=new ConstraintSet();
+            constraintSet.clone(constraintLayout);
+
+
+            //Thiết lập các ràng buộc
+            constraintSet.connect(linearLayout.getId(), ConstraintSet.START,
+                    ConstraintSet.PARENT_ID, ConstraintSet.START);
+
+            if(i<1){
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
+                        ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            }else {
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
+                        linearLayoutArrayList.get(i-1).getId(), ConstraintSet.BOTTOM);
+            }
+
+            constraintSet.applyTo(constraintLayout);
+        }
+
+    }
+
 }

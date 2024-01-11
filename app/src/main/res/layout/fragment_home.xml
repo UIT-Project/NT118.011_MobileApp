@@ -3,19 +3,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".homeFrag"
-    >
-<ProgressBar
-    android:layout_width="128dp"
-    android:layout_height="128dp"
-    android:layout_gravity="bottom"
-    android:layout_marginStart="160dp"
-    android:id="@+id/pb_homeFrag"/>
-    <GridView
-        android:id="@+id/gv_homeFrag_listPics"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".homeFrag">
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:numColumns="2"
-        android:orientation="vertical"
-        />
+        android:layout_height="match_parent">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:id="@+id/sv_homeFrag"
+            >
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cl_homeFrag_listPics"
+                    app:layout_constraintTop_toTopOf="parent"
+                    >
+                </androidx.constraintlayout.widget.ConstraintLayout>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:id="@+id/dummy"
+                    app:layout_constraintTop_toBottomOf="@id/cl_homeFrag_listPics"
+                    />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+        <ProgressBar
+            android:layout_width="128dp"
+            android:layout_height="128dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sv_homeFrag"
+            android:id="@+id/pb_homeFrag"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

@@ -36,6 +36,7 @@ import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -114,7 +115,8 @@ public class profileFrag extends Fragment {
         String b64Email=GeneralFunc.str2Base64(user.getEmail());
 
         ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
-        TextView tv_username=view.findViewById(R.id.tv_profileFrag_username);
+        TextView tv_username=view.findViewById(R.id.tv_profileFrag_username),
+                tv_follower_follow=view.findViewById(R.id.tv_profileFrag_follower_follow);
         ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.VISIBLE);
         ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(View.GONE);
 
@@ -127,6 +129,8 @@ public class profileFrag extends Fragment {
                         task.getResult().getValue())));
                 ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
                         View.VISIBLE);
+                ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
+                view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.VISIBLE);
             }
         });
 
@@ -142,25 +146,51 @@ public class profileFrag extends Fragment {
             }
         });
 
+        //Cập nhật tình trạng theo dõi
+        mDB.child(b64Email).child("follower").get().addOnCompleteListener(
+                new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if(task.isSuccessful()){
+                            tv_follower_follow.setText(String.valueOf(task.getResult()
+                                    .getChildrenCount())+" người theo dõi");
+                        }
+                    }
+                });
+        mDB.child(b64Email).child("follow").get().addOnCompleteListener(
+                new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if(task.isSuccessful()){
+                            tv_follower_follow.setText(
+                                    tv_follower_follow.getText().toString()+
+                                            " & đang theo dõi "+ String.valueOf(task
+                                            .getResult().getChildrenCount())+" người khác");
+                        }
+                    }
+                });
+
         //Lấy danh sách ảnh của tài khoản
         mDB.child(b64Email).child("pics").get().addOnCompleteListener(
                 new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 if(task.isSuccessful()){
-                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
+                    ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
+                        LinearLayout linearLayout=GeneralFunc.itemPic(view.getContext(),new objectPic(
                                 childSnapShot.getKey(),
                                 String.valueOf(childSnapShot.child("data").getValue()),
                                 String.valueOf(childSnapShot.child("name").getValue()),
                                 String.valueOf(childSnapShot.child("tags").getValue()),
                                 b64Email));
-                        cardViewArrayList.add(cardView);
+                        linearLayoutArrayList.add(linearLayout);
                     }
 
-                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
-                            cardViewArrayList,view,new View.OnClickListener() {
+                    ConstraintLayout constraintLayout= view.findViewById(R.id.cl_profileFrag_listPics);
+                    constraintLayout.removeAllViews();
+                    GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
+                            new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
@@ -189,9 +219,8 @@ public class profileFrag extends Fragment {
                                     View.VISIBLE);
                         }
                     });
-
-                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
                 }
+                view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.GONE);
             }
         });
 
@@ -351,62 +380,65 @@ public class profileFrag extends Fragment {
         });
 
         //Cập nhật lại danh sách ảnh
+        OnCompleteListener<DataSnapshot> onCompleteListener =
+                new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.VISIBLE);
+                if(task.isSuccessful()){
+                    ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
+                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                        LinearLayout linearLayout=GeneralFunc.itemPic(view.getContext(),new objectPic(
+                                childSnapShot.getKey(),
+                                String.valueOf(childSnapShot.child("data").getValue()),
+                                String.valueOf(childSnapShot.child("name").getValue()),
+                                String.valueOf(childSnapShot.child("tags").getValue()),
+                                b64Email));
+                        linearLayoutArrayList.add(linearLayout);
+                    }
+
+                    ConstraintLayout constraintLayout= view.findViewById(R.id.cl_profileFrag_listPics);
+                    constraintLayout.removeAllViews();
+                    GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                    vpImg.setTag(selectedImg.getTag());
+
+                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                            tv_username.getText().toString());
+
+                                    objectPic pic=(objectPic)selectedImg.getTag();
+                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                                "Tên ảnh: "+pic.getName());
+                                    }
+                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                                "Tags: "+pic.getStrHashtags());
+                                    }
+
+                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
+                                            View.GONE);
+                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
+                                            View.VISIBLE);
+                                }
+                            });
+                }
+                view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.GONE);
+            }
+        };
         mDB.child(b64Email).child("pics").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
                 //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if(task.isSuccessful()){
-                                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
-                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
-                                                childSnapShot.getKey(),
-                                                String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue()),
-                                                b64Email));
-                                        cardViewArrayList.add(cardView);
-                                    }
-
-                                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
-                                            cardViewArrayList,view,new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
-                                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                                                    vpImg.setTag(selectedImg.getTag());
-
-                                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
-                                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
-                                                            tv_username.getText().toString());
-
-                                                    objectPic pic=(objectPic)selectedImg.getTag();
-                                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
-                                                                "Tên ảnh: "+pic.getName());
-                                                    }
-                                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
-                                                                "Tags: "+pic.getStrHashtags());
-                                                    }
-
-                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                                                            View.GONE);
-                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
-                                                            View.VISIBLE);
-                                                }
-                                            });
-
-                                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
-                                }
-                            }
-                        });
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(onCompleteListener);
 
             }
 
@@ -414,118 +446,15 @@ public class profileFrag extends Fragment {
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
                 //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if(task.isSuccessful()){
-                                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
-                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
-                                                childSnapShot.getKey(),
-                                                String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue()),
-                                                b64Email));
-                                        cardViewArrayList.add(cardView);
-                                    }
-
-                                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
-                                            cardViewArrayList,view,new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
-                                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                                                    vpImg.setTag(selectedImg.getTag());
-
-                                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
-                                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
-                                                            tv_username.getText().toString());
-
-                                                    objectPic pic=(objectPic)selectedImg.getTag();
-                                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
-                                                                "Tên ảnh: "+pic.getName());
-                                                    }
-                                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
-                                                                "Tags: "+pic.getStrHashtags());
-                                                    }
-
-                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                                                            View.GONE);
-                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
-                                                            View.VISIBLE);
-                                                }
-                                            });
-
-                                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
-                                }
-                            }
-                        });
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(onCompleteListener);
 
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
 
-                ((FloatingActionButton)view.findViewById(
-                        R.id.fab_profileFrag_vP_back)).performClick();
-
                 //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if(task.isSuccessful()){
-                                    ArrayList<CardView> cardViewArrayList=new ArrayList<CardView>();
-                                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                        CardView cardView=GeneralFunc.itemPic(view.getContext(),new objectPic(
-                                                childSnapShot.getKey(),
-                                                String.valueOf(childSnapShot.child("data").getValue()),
-                                                String.valueOf(childSnapShot.child("name").getValue()),
-                                                String.valueOf(childSnapShot.child("tags").getValue()),
-                                                b64Email));
-                                        cardViewArrayList.add(cardView);
-                                    }
-
-                                    GeneralFunc.items2Layout(view.findViewById(R.id.cl_profileFrag_listPics),
-                                            cardViewArrayList,view,new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
-                                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                                                    vpImg.setTag(selectedImg.getTag());
-
-                                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
-                                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
-                                                            tv_username.getText().toString());
-
-                                                    objectPic pic=(objectPic)selectedImg.getTag();
-                                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
-                                                                "Tên ảnh: "+pic.getName());
-                                                    }
-                                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
-                                                                "Tags: "+pic.getStrHashtags());
-                                                    }
-
-                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                                                            View.GONE);
-                                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
-                                                            View.VISIBLE);
-                                                }
-                                            });
-
-                                    ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
-                                }
-                            }
-                        });
+                mDB.child(b64Email).child("pics").get().addOnCompleteListener(onCompleteListener);
 
             }
 
