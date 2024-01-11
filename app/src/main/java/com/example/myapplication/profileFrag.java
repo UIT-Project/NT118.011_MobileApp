@@ -4,6 +4,7 @@ import static android.app.Activity.RESULT_OK;
 import static android.content.Intent.makeMainSelectorActivity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -15,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
@@ -197,6 +199,7 @@ public class profileFrag extends Fragment {
                                     vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
                             vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
                             vpImg.setTag(selectedImg.getTag());
+                            vpImg.setTag(R.id.isZip,true);
 
                             ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
                                     ((BitmapDrawable)userPic.getDrawable()).getBitmap());
@@ -287,7 +290,10 @@ public class profileFrag extends Fragment {
         ((FloatingActionButton)view.findViewById(R.id.fab_profileFrag_vP_back)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_img)).setImageBitmap(null);
+                ImageView iv_profileFrag_vP_img=view.findViewById(R.id.iv_profileFrag_vP_img);
+                iv_profileFrag_vP_img.setImageBitmap(null);
+                iv_profileFrag_vP_img.setTag(R.id.isZip,true);
+
                 ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(null);
                 ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText("");
 
@@ -311,66 +317,98 @@ public class profileFrag extends Fragment {
 
                 //Nhận item
                 popupMenu.getMenuInflater().inflate(R.menu.profile_vp_more_menu,popupMenu.getMenu());
+                if((boolean) view.findViewById(R.id.iv_profileFrag_vP_img).getTag(R.id.isZip)){
+                    popupMenu.getMenu().getItem(0).setTitle("Xem ảnh bản đầy đủ");
+                }else {
+                    popupMenu.getMenu().getItem(0).setTitle("Xem ảnh bản nén");
+                }
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
+                        popupMenu.dismiss();
+
+                        objectPic pic = (objectPic) view.findViewById(R.id.iv_profileFrag_vP_img)
+                                .getTag();
+
                         //Lựa chọn chỉnh sửa
                         if(item.getItemId()==R.id.profile_vp_more_i_edit){
                             Intent intent=new Intent(getActivity().getApplicationContext(),
                                     updateImg.class);
 
-                            intent.putExtra("picInfo",(objectPic)((ImageView)view
-                                    .findViewById(R.id.iv_profileFrag_vP_img)).getTag());
+                            intent.putExtra("picInfo",pic);
                             intent.putExtra("b64Email",GeneralFunc.str2Base64(user.getEmail()));
 
                             getActivity().startActivity(intent);
+
+                            return true;
                         }
 
                         //Lựa chọn tải về
                         if(item.getItemId()==R.id.profile_vp_more_i_download){
-                            mDB.child(b64Email).child("pics").child(
-                                    ((objectPic)((ImageView)view.findViewById(
-                                            R.id.iv_profileFrag_vP_img)).getTag()).getKey())
-                                    .child("full").get()
-                                    .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                    File directory = new File(Environment.getExternalStorageDirectory(),
-                                            Environment.DIRECTORY_PICTURES+"/surpic");
-                                    if (!directory.exists()) {
-                                        directory.mkdirs();
-                                    }
+                            GeneralFunc.downloadImg(view.getContext(),mDB,b64Email,pic.getKey());
 
-                                    //Tự động tạo file dựa vào thời gian
-                                    String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
-                                            new Date()).toString();
-                                    String fileName = "image_" + timeStamp + ".jpeg";
-
-                                    File file = new File(directory, fileName);
-
-                                    try {
-                                        //Lưu ảnh vào file
-                                        FileOutputStream fos = new FileOutputStream(file);
-                                        GeneralFunc.unzipBase64ToImg(task.getResult().getValue()
-                                                .toString()).compress(Bitmap.CompressFormat.JPEG,
-                                                100, fos);
-                                        fos.close();
-
-                                        //Thông báo để GALLERY cập nhật
-                                        view.getContext().sendBroadcast( makeMainSelectorActivity(
-                                                android.content.Intent.ACTION_MAIN,
-                                                android.content.Intent.CATEGORY_APP_GALLERY));
-
-                                        Toast.makeText(view.getContext(),"Tải xuống thành công",
-                                                Toast.LENGTH_SHORT).show();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
+                            Toast.makeText(view.getContext(),"Đang tải...",Toast.LENGTH_SHORT).show();
+                            return true;
                         }
 
-                        return true;
+                        //Lựa chọn xóa ảnh
+                        if (item.getItemId()==R.id.profile_vp_more_i_delete){
+                            AlertDialog.Builder builder=new AlertDialog.Builder(view.getContext());
+                            builder.setMessage("Bạn có chắc muốn xóa ảnh này?").setTitle("Xác nhận");
+                            builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    GeneralFunc.deleteImg(mDB,b64Email,pic.getKey());
+                                }
+                            });
+                            builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+
+                            AlertDialog dialog=builder.create();
+                            dialog.show();
+
+                            return true;
+                        }
+
+                        //Lựa chọn xem bản đủ
+                        if(item.getItemId()==R.id.profile_vp_more_i_full_zip){
+                            ImageView iv_profileFrag_vP_img=view.findViewById(R.id.iv_profileFrag_vP_img);
+                            if((boolean)iv_profileFrag_vP_img.getTag(R.id.isZip)){
+                                iv_profileFrag_vP_img.setTag(R.id.isZip,false);
+
+                                mDB.child(b64Email).child("pics").child(pic.getKey())
+                                        .child("full").get().addOnCompleteListener(
+                                                new OnCompleteListener<DataSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                iv_profileFrag_vP_img.setImageBitmap(
+                                                        GeneralFunc.unzipBase64ToImg(
+                                                                String.valueOf(task.getResult().getValue())));
+
+                                                view.findViewById(R.id.pb_profileFrag)
+                                                        .setVisibility(View.GONE);
+                                                iv_profileFrag_vP_img.setVisibility(View.VISIBLE);
+                                            }
+                                        });
+
+                                view.findViewById(R.id.pb_profileFrag)
+                                        .setVisibility(View.VISIBLE);
+                                iv_profileFrag_vP_img.setVisibility(View.GONE);
+                            } else {
+                                iv_profileFrag_vP_img.setTag(R.id.isZip,true);
+
+                                iv_profileFrag_vP_img.setImageBitmap(
+                                        GeneralFunc.unzipBase64ToImg(pic.getData()));
+                            }
+
+                            return true;
+                        }
+
+                        return false;
                     }
                 });
 
@@ -407,6 +445,7 @@ public class profileFrag extends Fragment {
                                             vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
                                     vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
                                     vpImg.setTag(selectedImg.getTag());
+                                    vpImg.setTag(R.id.isZip,true);
 
                                     ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
                                             ((BitmapDrawable)userPic.getDrawable()).getBitmap());

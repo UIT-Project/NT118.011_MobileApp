@@ -5,4 +5,5 @@
     <item name="data" type="id"/>
     <item name="name" type="id"/>
     <item name="tags" type="id"/>
+    <item name="isZip" type="id"/>
 </resources>

@@ -7,7 +7,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.myapplication.databinding.ActivityUpdateImgBinding;
@@ -95,8 +98,7 @@ public class updateImg extends AppCompatActivity {
                     builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            mDB.child(b64Email).child("pics").child(pic.getKey())
-                                    .removeValue();
+                            GeneralFunc.deleteImg(mDB,b64Email,pic.getKey());
                             finish();
                         }
                     });
@@ -109,6 +111,27 @@ public class updateImg extends AppCompatActivity {
 
                     AlertDialog dialog=builder.create();
                     dialog.show();
+                }
+            });
+
+            //Chuỗi chuyển tiếp
+            binding.etUpdateImgName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if(actionId== EditorInfo.IME_ACTION_NEXT){
+                        binding.etUpdateImgTags.requestFocus();
+                    }
+                    return false;
+                }
+            });
+            binding.etUpdateImgTags.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if(actionId==EditorInfo.IME_ACTION_GO){
+                        GeneralFunc.hideKeyboard(updateImg.this,binding.etUpdateImgTags);
+                        binding.bUpdateImgUpdate.performClick();
+                    }
+                    return false;
                 }
             });
         }

@@ -58,6 +58,7 @@
         app:layout_constraintTop_toBottomOf="@id/tv_login_email"
         android:layout_marginLeft="20dp"
         android:hint="Nhập email đã đăng ký"
+        android:imeOptions="actionNext"
         />
     <TextView
         android:id="@+id/tv_login_err_email"
@@ -91,6 +92,7 @@
         android:layout_marginLeft="20dp"
         android:hint="Nhập mật khẩu"
         android:inputType="textPassword"
+        android:imeOptions="actionGo"
         />
     <TextView
         android:id="@+id/tv_login_err_pass"

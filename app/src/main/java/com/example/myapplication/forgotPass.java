@@ -7,7 +7,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -174,5 +176,16 @@ public class forgotPass extends AppCompatActivity {
                     }
                 });
 
+        //Nút go trên keyboard
+        et_email.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId == EditorInfo.IME_ACTION_GO){
+                    GeneralFunc.hideKeyboard(forgotPass.this,et_email);
+                    resetPass.performClick();
+                }
+                return false;
+            }
+        });
     }
 }

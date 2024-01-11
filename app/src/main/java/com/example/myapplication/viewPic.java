@@ -13,6 +13,8 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.StrictMode;
 import android.text.format.DateFormat;
 import android.view.MenuItem;
 import android.view.View;
@@ -46,6 +48,19 @@ public class viewPic extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                .detectDiskReads()
+                .detectDiskWrites()
+                .detectNetwork()   // or .detectAll() for all detectable problems
+                .penaltyLog()
+                .build());
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .penaltyLog()
+                .penaltyDeath()
+                .build());
+
         super.onCreate(savedInstanceState);
 
         binding = ActivityViewPicBinding.inflate(getLayoutInflater());
@@ -64,6 +79,7 @@ public class viewPic extends AppCompatActivity {
             pic = intent.getParcelableExtra("viewPic");
 
             ImageView vpImg = binding.ivViewPicImg;
+            vpImg.setTag(R.id.isZip,true);
 
             //Cập nhật giao diện
             if(pic==null){
@@ -194,9 +210,14 @@ public class viewPic extends AppCompatActivity {
                     String string=binding.bViewPicFollow.getTag().toString();
                     boolean isFollowed=!binding.bViewPicFollow.getTag().toString().equals("0");
                     if(!isFollowed){
-                        popupMenu.getMenu().getItem(0).setTitle("Theo dõi "+user.getUsername());
+                        popupMenu.getMenu().getItem(1).setTitle("Theo dõi "+user.getUsername());
                     } else {
-                        popupMenu.getMenu().getItem(0).setTitle("Bỏ theo dõi "+user.getUsername());
+                        popupMenu.getMenu().getItem(1).setTitle("Bỏ theo dõi "+user.getUsername());
+                    }
+                    if((boolean) binding.ivViewPicImg.getTag(R.id.isZip)){
+                        popupMenu.getMenu().getItem(0).setTitle("Xem ảnh bản đầy đủ");
+                    }else {
+                        popupMenu.getMenu().getItem(0).setTitle("Xem ảnh bản nén");
                     }
 
                     popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -240,50 +261,59 @@ public class viewPic extends AppCompatActivity {
                                             }
                                         });
 
+                                return true;
                             }
 
                             //Lựa chọn tải về
                             if(item.getItemId()==R.id.vp_more_i_download){
-                                mDB.child(pic.getB64EmailOwner()).child("pics")
-                                        .child(pic.getKey()).child("full").get()
-                                        .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                        File directory = new File(Environment.getExternalStorageDirectory(),
-                                                Environment.DIRECTORY_PICTURES+"/surpic");
-                                        if (!directory.exists()) {
-                                            directory.mkdirs();
-                                        }
+                                GeneralFunc.downloadImg(viewPic.this,mDB,
+                                        pic.getB64EmailOwner(),pic.getKey());
 
-                                        //Tự động tạo file dựa vào thời gian
-                                        String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
-                                                new Date()).toString();
-                                        String fileName = "image_" + timeStamp + ".jpeg";
-
-                                        File file = new File(directory, fileName);
-
-                                        try {
-                                            //Lưu ảnh vào file
-                                            FileOutputStream fos = new FileOutputStream(file);
-                                            GeneralFunc.unzipBase64ToImg(task.getResult().getValue()
-                                                    .toString()).compress(Bitmap.CompressFormat.JPEG,
-                                                    100, fos);
-                                            fos.close();
-
-                                            //Thông báo để GALLERY cập nhật
-                                            viewPic.this.sendBroadcast( makeMainSelectorActivity(
-                                                    android.content.Intent.ACTION_MAIN,
-                                                    android.content.Intent.CATEGORY_APP_GALLERY));
-
-                                            Toast.makeText(viewPic.this,"Tải xuống thành công",
-                                                    Toast.LENGTH_SHORT).show();
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
+                                return true;
                             }
-                            return true;
+
+                            //Lựa chọn xem bản đủ/nén
+                            if(item.getItemId()==R.id.vp_more_i_full_zip){
+                                if((boolean)binding.ivViewPicImg.getTag(R.id.isZip)){
+                                    binding.ivViewPicImg.setTag(R.id.isZip,false);
+
+                                    new Handler().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mDB.child(pic.getB64EmailOwner()).child("pics")
+                                                    .child(pic.getKey()).child("full")
+                                                    .get().addOnCompleteListener(
+                                                            new OnCompleteListener<DataSnapshot>() {
+                                                                @Override
+                                                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                    binding.ivViewPicImg.setImageBitmap(
+                                                                            GeneralFunc.unzipBase64ToImg(
+                                                                                    String.valueOf(
+                                                                                            task.getResult()
+                                                                                                    .getValue())));
+
+                                                                    binding.pbViewPic
+                                                                            .setVisibility(View.GONE);
+                                                                    binding.ivViewPicImg.setVisibility(View.VISIBLE);
+                                                                }
+                                                            });
+                                        }
+                                    });
+
+                                    binding.pbViewPic.setVisibility(View.VISIBLE);
+                                    binding.ivViewPicImg.setVisibility(View.GONE);
+                                } else {
+                                    binding.ivViewPicImg.setTag(R.id.isZip,true);
+
+                                    binding.ivViewPicImg.setImageBitmap(
+                                            GeneralFunc.unzipBase64ToImg(pic.getData()));
+                                }
+
+                                return true;
+                            }
+
+
+                            return false;
                         }
                     });
 

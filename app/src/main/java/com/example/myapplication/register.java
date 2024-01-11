@@ -14,7 +14,9 @@ import android.os.CountDownTimer;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -284,6 +286,45 @@ public class register extends AppCompatActivity {
                 GeneralFunc.startTimer(register.this,(TextView)findViewById(
                         R.id.tv_register_success_resend),(TextView)findViewById(
                         R.id.tv_register_success_cd),60);
+            }
+        });
+
+        //Chuỗi chuyển tiếp
+        et_name.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId== EditorInfo.IME_ACTION_NEXT){
+                    et_email.requestFocus();
+                }
+                return false;
+            }
+        });
+        et_email.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId==EditorInfo.IME_ACTION_NEXT){
+                    et_pass.requestFocus();
+                }
+                return false;
+            }
+        });
+        et_pass.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId==EditorInfo.IME_ACTION_NEXT){
+                    et_repass.requestFocus();
+                }
+                return false;
+            }
+        });
+        et_repass.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId==EditorInfo.IME_ACTION_GO){
+                    GeneralFunc.hideKeyboard(register.this,et_repass);
+                    b_register.performClick();
+                }
+                return false;
             }
         });
     }

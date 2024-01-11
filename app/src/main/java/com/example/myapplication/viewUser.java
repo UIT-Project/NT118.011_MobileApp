@@ -16,6 +16,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.text.format.DateFormat;
 import android.view.MenuItem;
@@ -177,6 +179,7 @@ public class viewUser extends AppCompatActivity {
                                                         vpImg = binding.ivViewUserVPImg;
                                                 vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
                                                 vpImg.setTag(selectedImg.getTag());
+                                                vpImg.setTag(R.id.isZip,true);
 
                                                 binding.ivViewUserVPProfilePic.setImageBitmap(
                                                         ((BitmapDrawable)userPic.getDrawable()).getBitmap());
@@ -214,139 +217,83 @@ public class viewUser extends AppCompatActivity {
                     });
 
             //Cập nhật lại danh sách ảnh
+            OnCompleteListener<DataSnapshot> onCompleteListener =
+                    new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    if(task.isSuccessful()){
+                        ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
+                        for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                            LinearLayout linearLayout=GeneralFunc.itemPic(viewUser.this,new objectPic(
+                                    childSnapShot.getKey(),
+                                    String.valueOf(childSnapShot.child("data").getValue()),
+                                    String.valueOf(childSnapShot.child("name").getValue()),
+                                    String.valueOf(childSnapShot.child("tags").getValue()),
+                                    targetUserB64Email));
+                            linearLayoutArrayList.add(linearLayout);
+                        }
+
+                        ConstraintLayout constraintLayout= binding.clViewUserProfileList;
+                        constraintLayout.removeAllViews();
+                        GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
+                                new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                                vpImg = binding.ivViewUserVPImg;
+                                        vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                        vpImg.setTag(selectedImg.getTag());
+                                        vpImg.setTag(R.id.isZip,true);
+
+                                        binding.ivViewUserVPProfilePic.setImageBitmap(
+                                                ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                        binding.tvViewUserVPUsername.setText(tv_username.getText().toString());
+
+                                        objectPic pic=(objectPic)selectedImg.getTag();
+                                        if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                            binding.tvViewUserVPNamePic.setText("Tên ảnh: "+pic.getName());
+                                        }
+                                        if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                            binding.tvViewUserVPTagsPic.setText("Tags: "+pic.getStrHashtags());
+                                        }
+
+                                        if(binding.bViewUserFollow.getTag().toString().equals("0")){
+                                            binding.bViewUserVPFollow.setText("Theo dõi");
+                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
+                                                    .getColorStateList(viewUser.this,
+                                                            R.color.gray));
+                                            binding.bViewUserVPFollow.setTag("0");
+                                        }else {
+                                            binding.bViewUserVPFollow.setText("Bỏ theo dõi");
+                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
+                                                    .getColorStateList(viewUser.this,
+                                                            R.color.red));
+                                            binding.bViewUserVPFollow.setTag("1");
+                                        }
+
+                                        binding.clViewUserProfile.setVisibility(View.GONE);
+                                        binding.clViewUserProfileVP.setVisibility(View.VISIBLE);
+                                    }
+                                });
+                    }
+                    progressBar.setVisibility(View.GONE);
+                }
+            };
             mDB.child(targetUserB64Email).child("pics").addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
                     //Lấy danh sách ảnh của tài khoản
-                    mDB.child(targetUserB64Email).child("pics").get().addOnCompleteListener(
-                            new OnCompleteListener<DataSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                    if(task.isSuccessful()){
-                                        ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
-                                        for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                            LinearLayout linearLayout=GeneralFunc.itemPic(viewUser.this,new objectPic(
-                                                    childSnapShot.getKey(),
-                                                    String.valueOf(childSnapShot.child("data").getValue()),
-                                                    String.valueOf(childSnapShot.child("name").getValue()),
-                                                    String.valueOf(childSnapShot.child("tags").getValue()),
-                                                    targetUserB64Email));
-                                            linearLayoutArrayList.add(linearLayout);
-                                        }
-
-                                        ConstraintLayout constraintLayout= binding.clViewUserProfileList;
-                                        constraintLayout.removeAllViews();
-                                        GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                                                new View.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(View v) {
-                                                        ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                                                vpImg = binding.ivViewUserVPImg;
-                                                        vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                                                        vpImg.setTag(selectedImg.getTag());
-
-                                                        binding.ivViewUserVPProfilePic.setImageBitmap(
-                                                                ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                                                        binding.tvViewUserVPUsername.setText(tv_username.getText().toString());
-
-                                                        objectPic pic=(objectPic)selectedImg.getTag();
-                                                        if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                                            binding.tvViewUserVPNamePic.setText("Tên ảnh: "+pic.getName());
-                                                        }
-                                                        if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                                            binding.tvViewUserVPTagsPic.setText("Tags: "+pic.getStrHashtags());
-                                                        }
-
-                                                        if(binding.bViewUserFollow.getTag().toString().equals("0")){
-                                                            binding.bViewUserVPFollow.setText("Theo dõi");
-                                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
-                                                                    .getColorStateList(viewUser.this,
-                                                                            R.color.gray));
-                                                            binding.bViewUserVPFollow.setTag("0");
-                                                        }else {
-                                                            binding.bViewUserVPFollow.setText("Bỏ theo dõi");
-                                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
-                                                                    .getColorStateList(viewUser.this,
-                                                                            R.color.red));
-                                                            binding.bViewUserVPFollow.setTag("1");
-                                                        }
-
-                                                        binding.clViewUserProfile.setVisibility(View.GONE);
-                                                        binding.clViewUserProfileVP.setVisibility(View.VISIBLE);
-                                                    }
-                                                });
-                                    }
-                                    progressBar.setVisibility(View.GONE);
-                                }
-                            });
+                    mDB.child(targetUserB64Email).child("pics").get()
+                            .addOnCompleteListener(onCompleteListener);
                 }
 
                 @Override
                 public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
                     //Lấy danh sách ảnh của tài khoản
-                    mDB.child(targetUserB64Email).child("pics").get().addOnCompleteListener(
-                            new OnCompleteListener<DataSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                    if(task.isSuccessful()){
-                                        ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
-                                        for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                            LinearLayout linearLayout=GeneralFunc.itemPic(viewUser.this,new objectPic(
-                                                    childSnapShot.getKey(),
-                                                    String.valueOf(childSnapShot.child("data").getValue()),
-                                                    String.valueOf(childSnapShot.child("name").getValue()),
-                                                    String.valueOf(childSnapShot.child("tags").getValue()),
-                                                    targetUserB64Email));
-                                            linearLayoutArrayList.add(linearLayout);
-                                        }
-
-                                        ConstraintLayout constraintLayout= binding.clViewUserProfileList;
-                                        constraintLayout.removeAllViews();
-                                        GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                                                new View.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(View v) {
-                                                        ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                                                vpImg = binding.ivViewUserVPImg;
-                                                        vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                                                        vpImg.setTag(selectedImg.getTag());
-
-                                                        binding.ivViewUserVPProfilePic.setImageBitmap(
-                                                                ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                                                        binding.tvViewUserVPUsername.setText(tv_username.getText().toString());
-
-                                                        objectPic pic=(objectPic)selectedImg.getTag();
-                                                        if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                                            binding.tvViewUserVPNamePic.setText("Tên ảnh: "+pic.getName());
-                                                        }
-                                                        if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                                            binding.tvViewUserVPTagsPic.setText("Tags: "+pic.getStrHashtags());
-                                                        }
-
-                                                        if(binding.bViewUserFollow.getTag().toString().equals("0")){
-                                                            binding.bViewUserVPFollow.setText("Theo dõi");
-                                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
-                                                                    .getColorStateList(viewUser.this,
-                                                                            R.color.gray));
-                                                            binding.bViewUserVPFollow.setTag("0");
-                                                        }else {
-                                                            binding.bViewUserVPFollow.setText("Bỏ theo dõi");
-                                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
-                                                                    .getColorStateList(viewUser.this,
-                                                                            R.color.red));
-                                                            binding.bViewUserVPFollow.setTag("1");
-                                                        }
-
-                                                        binding.clViewUserProfile.setVisibility(View.GONE);
-                                                        binding.clViewUserProfileVP.setVisibility(View.VISIBLE);
-                                                    }
-                                                });
-                                    }
-                                    progressBar.setVisibility(View.GONE);
-                                }
-                            });
+                    mDB.child(targetUserB64Email).child("pics").get()
+                            .addOnCompleteListener(onCompleteListener);
 
                 }
 
@@ -354,67 +301,8 @@ public class viewUser extends AppCompatActivity {
                 public void onChildRemoved(@NonNull DataSnapshot snapshot) {
 
                     //Lấy danh sách ảnh của tài khoản
-                    mDB.child(targetUserB64Email).child("pics").get().addOnCompleteListener(
-                            new OnCompleteListener<DataSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                    if(task.isSuccessful()){
-                                        ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
-                                        for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                                            LinearLayout linearLayout=GeneralFunc.itemPic(viewUser.this,new objectPic(
-                                                    childSnapShot.getKey(),
-                                                    String.valueOf(childSnapShot.child("data").getValue()),
-                                                    String.valueOf(childSnapShot.child("name").getValue()),
-                                                    String.valueOf(childSnapShot.child("tags").getValue()),
-                                                    targetUserB64Email));
-                                            linearLayoutArrayList.add(linearLayout);
-                                        }
-
-                                        ConstraintLayout constraintLayout= binding.clViewUserProfileList;
-                                        constraintLayout.removeAllViews();
-                                        GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                                                new View.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(View v) {
-                                                        ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                                                vpImg = binding.ivViewUserVPImg;
-                                                        vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                                                        vpImg.setTag(selectedImg.getTag());
-
-                                                        binding.ivViewUserVPProfilePic.setImageBitmap(
-                                                                ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                                                        binding.tvViewUserVPUsername.setText(tv_username.getText().toString());
-
-                                                        objectPic pic=(objectPic)selectedImg.getTag();
-                                                        if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                                            binding.tvViewUserVPNamePic.setText("Tên ảnh: "+pic.getName());
-                                                        }
-                                                        if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                                            binding.tvViewUserVPTagsPic.setText("Tags: "+pic.getStrHashtags());
-                                                        }
-
-                                                        if(binding.bViewUserFollow.getTag().toString().equals("0")){
-                                                            binding.bViewUserVPFollow.setText("Theo dõi");
-                                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
-                                                                    .getColorStateList(viewUser.this,
-                                                                            R.color.gray));
-                                                            binding.bViewUserVPFollow.setTag("0");
-                                                        }else {
-                                                            binding.bViewUserVPFollow.setText("Bỏ theo dõi");
-                                                            binding.bViewUserVPFollow.setBackgroundTintList(ContextCompat
-                                                                    .getColorStateList(viewUser.this,
-                                                                            R.color.red));
-                                                            binding.bViewUserVPFollow.setTag("1");
-                                                        }
-
-                                                        binding.clViewUserProfile.setVisibility(View.GONE);
-                                                        binding.clViewUserProfileVP.setVisibility(View.VISIBLE);
-                                                    }
-                                                });
-                                    }
-                                    progressBar.setVisibility(View.GONE);
-                                }
-                            });
+                    mDB.child(targetUserB64Email).child("pics").get()
+                            .addOnCompleteListener(onCompleteListener);
 
                 }
 
@@ -458,14 +346,23 @@ public class viewUser extends AppCompatActivity {
                     String string=binding.bViewUserFollow.getTag().toString();
                     boolean isFollowed=!binding.bViewUserFollow.getTag().toString().equals("0");
                     if(!isFollowed){
-                        popupMenu.getMenu().getItem(0).setTitle("Theo dõi "+user.getUsername());
+                        popupMenu.getMenu().getItem(1).setTitle("Theo dõi "+user.getUsername());
                     } else {
-                        popupMenu.getMenu().getItem(0).setTitle("Bỏ theo dõi "+user.getUsername());
+                        popupMenu.getMenu().getItem(1).setTitle("Bỏ theo dõi "+user.getUsername());
+                    }
+                    if((boolean) binding.ivViewUserVPImg.getTag(R.id.isZip)){
+                        popupMenu.getMenu().getItem(0).setTitle("Xem ảnh bản đầy đủ");
+                    }else {
+                        popupMenu.getMenu().getItem(0).setTitle("Xem ảnh bản nén");
                     }
 
                     popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
+                            popupMenu.dismiss();
+
+                            objectPic pic=(objectPic) binding.ivViewUserVPImg.getTag();
+
                             //Lựa chọn (bỏ) theo dõi
                             if(item.getItemId()==R.id.vp_more_i_follow){
                                 if(!isFollowed){
@@ -499,43 +396,61 @@ public class viewUser extends AppCompatActivity {
                                     binding.bViewUserFollow.setTag("0");
                                     binding.bViewUserVPFollow.setTag("0");
                                 }
+
+                                return true;
                             }
 
                             //Lựa chọn tải về
                             if(item.getItemId()==R.id.vp_more_i_download){
-                                File directory = new File(Environment.getExternalStorageDirectory(),
-                                        Environment.DIRECTORY_PICTURES+"/surpic");
-                                if (!directory.exists()) {
-                                    directory.mkdirs();
-                                }
+                                GeneralFunc.downloadImg(viewUser.this, mDB,
+                                        targetUserB64Email, pic.getKey());
 
-                                //Tự động tạo file dựa vào thời gian
-                                String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
-                                        new Date()).toString();
-                                String fileName = "image_" + timeStamp + ".jpeg";
+                                Toast.makeText(viewUser.this,"Đang tải...",Toast.LENGTH_SHORT).show();
 
-                                File file = new File(directory, fileName);
-
-                                try {
-                                    //Lưu ảnh vào file
-                                    FileOutputStream fos = new FileOutputStream(file);
-                                    ((BitmapDrawable)binding.ivViewUserVPImg.getDrawable()).getBitmap()
-                                            .compress(Bitmap.CompressFormat.JPEG, 100, fos);
-                                    fos.close();
-
-                                    //Thông báo để GALLERY cập nhật
-                                    viewUser.this.sendBroadcast( makeMainSelectorActivity(
-                                            android.content.Intent.ACTION_MAIN,
-                                            android.content.Intent.CATEGORY_APP_GALLERY));
-
-                                    Toast.makeText(viewUser.this,"Tải xuống thành công",
-                                            Toast.LENGTH_SHORT).show();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                return true;
                             }
 
-                            return true;
+                            //Lựa chọn xem bản đủ
+                            if(item.getItemId()==R.id.vp_more_i_full_zip){
+                                if((boolean)binding.ivViewUserVPImg.getTag(R.id.isZip)){
+                                    binding.ivViewUserVPImg.setTag(R.id.isZip,false);
+
+                                    new Handler().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mDB.child(targetUserB64Email).child("pics")
+                                                    .child(pic.getKey()).child("full")
+                                                    .get().addOnCompleteListener(
+                                                            new OnCompleteListener<DataSnapshot>() {
+                                                                @Override
+                                                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                    binding.ivViewUserVPImg.setImageBitmap(
+                                                                            GeneralFunc.unzipBase64ToImg(
+                                                                                    String.valueOf(
+                                                                                            task.getResult()
+                                                                                                    .getValue())));
+
+                                                                    binding.pbViewUser
+                                                                            .setVisibility(View.GONE);
+                                                                    binding.ivViewUserVPImg.setVisibility(View.VISIBLE);
+                                                                }
+                                                            });
+                                        }
+                                    });
+
+                                    binding.pbViewUser.setVisibility(View.VISIBLE);
+                                    binding.ivViewUserVPImg.setVisibility(View.GONE);
+                                } else {
+                                    binding.ivViewUserVPImg.setTag(R.id.isZip,true);
+
+                                    binding.ivViewUserVPImg.setImageBitmap(
+                                            GeneralFunc.unzipBase64ToImg(pic.getData()));
+                                }
+
+                                return true;
+                            }
+
+                            return false;
                         }
                     });
 

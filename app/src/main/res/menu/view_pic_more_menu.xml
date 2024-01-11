@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="Xem ảnh bản đầy đủ" android:id="@+id/vp_more_i_full_zip"/>
     <item android:title="Theo dõi" android:id="@+id/vp_more_i_follow"/>
     <item android:title="Tải ảnh xuống" android:id="@+id/vp_more_i_download"/>
 </menu>

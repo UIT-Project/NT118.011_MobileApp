@@ -10,7 +10,9 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -196,6 +198,29 @@ public class login extends AppCompatActivity {
                 Intent intent=new Intent(getApplicationContext(), forgotPass.class);
                 startActivity(intent);
                 finish();
+            }
+        });
+
+        //Nút next trên keyboard
+        et_email.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId== EditorInfo.IME_ACTION_NEXT){
+                    et_pass.requestFocus();
+                }
+                return false;
+            }
+        });
+
+        //Nút go trên key board
+        et_pass.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId==EditorInfo.IME_ACTION_GO){
+                    GeneralFunc.hideKeyboard(login.this,et_pass);
+                    b_login.performClick();
+                }
+                return false;
             }
         });
     }

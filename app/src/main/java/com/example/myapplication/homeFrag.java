@@ -95,6 +95,7 @@ public class homeFrag extends Fragment {
                     public void onComplete(@NonNull Task<DataSnapshot> task) {
                         if(task.isSuccessful()){
                             ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
+                            ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
                             //int picCount=0;
 
                             for(DataSnapshot childSnapShot : task.getResult().getChildren()){
@@ -106,11 +107,7 @@ public class homeFrag extends Fragment {
                                         .getChildren()){
                                     //if(random.nextBoolean())continue;
 
-                                    LinearLayout linearLayout=GeneralFunc.itemPic(
-                                            view.getContext(),
-                                            new objectPic(
-                                                    childSnapShot1.getKey(),
-                                                    "","","", ownerB64Email));
+                                    dummyList.add(true);
 
                                     mDB.child(ownerB64Email).child("pics")
                                             .child(childSnapShot1.getKey()).get().addOnCompleteListener(
@@ -120,85 +117,93 @@ public class homeFrag extends Fragment {
                                                     DataSnapshot dataSnapshot=task.getResult();
                                                     objectPic pic=new objectPic(
                                                             dataSnapshot.getKey(),
-                                                            String.valueOf(dataSnapshot.child("data").getValue()),
-                                                            String.valueOf(dataSnapshot.child("name").getValue()),
-                                                            String.valueOf(dataSnapshot.child("tags").getValue()),
+                                                            String.valueOf(dataSnapshot.child(
+                                                                    "data").getValue()),
+
+                                                            String.valueOf(dataSnapshot.child(
+                                                                    "name").getValue()),
+
+                                                            String.valueOf(dataSnapshot.child(
+                                                                    "tags").getValue()),
                                                             ownerB64Email);
 
-                                                    CardView cardView=(CardView) linearLayout.getChildAt(0);
+                                                    LinearLayout linearLayout=GeneralFunc.itemPic(
+                                                            view.getContext(), pic);
+                                                    linearLayoutArrayList.add(linearLayout);
 
-                                                    ImageView imageView = (ImageView) cardView.getChildAt(0);
-                                                    imageView.setImageBitmap(unzipBase64ToImg(pic.getData()));
-                                                    imageView.setTag(pic);
+                                                    if(linearLayoutArrayList.size()==dummyList.size())
+                                                    {
+                                                        ConstraintLayout constraintLayout =
+                                                                view.findViewById(R.id.cl_homeFrag_listPics);
+                                                        constraintLayout.removeAllViews();
+                                                        GeneralFunc.items2Layout(constraintLayout,
+                                                                linearLayoutArrayList,
+                                                                new View.OnClickListener() {
+                                                                    @Override
+                                                                    public void onClick(View v) {
+                                                                        v.setEnabled(false);
+
+                                                                        mDB.child(b64Email).get().addOnCompleteListener(
+                                                                                new OnCompleteListener<DataSnapshot>() {
+                                                                                    @Override
+                                                                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                                        try{
+                                                                                            Intent intent=new Intent(view.getContext(),
+                                                                                                    viewPic.class);
+
+                                                                                            intent.putExtra("user",
+                                                                                                    new objectUser(user.getEmail(),
+                                                                                                            false,
+                                                                                                            task.getResult().child("profile_pic")
+                                                                                                                    .getValue().toString(),
+                                                                                                            task.getResult().child("username")
+                                                                                                                    .getValue().toString()));
+
+                                                                                            intent.putExtra("viewPic",
+                                                                                                    (objectPic)v.findViewById(R.id.iv_itemPic)
+                                                                                                            .getTag());
+
+                                                                                            startActivity(intent);
+                                                                                        }catch (Exception e){ //Lỗi do kích thước ảnh lớn
+                                                                                            Intent intent=new Intent(view.getContext(),
+                                                                                                    viewPic.class);
+
+                                                                                            intent.putExtra("user",
+                                                                                                    new objectUser(user.getEmail(),
+                                                                                                            false,
+                                                                                                            task.getResult().child("profile_pic")
+                                                                                                                    .getValue().toString(),
+                                                                                                            task.getResult().child("username")
+                                                                                                                    .getValue().toString()));
+
+                                                                                            objectPic pic=(objectPic)v.findViewById(R.id.iv_itemPic)
+                                                                                                    .getTag();
+
+                                                                                            intent.putExtra("viewPicMin",
+                                                                                                    new objectPic(pic.getKey(),
+                                                                                                            pic.getName(), pic.getStrHashtags(),
+                                                                                                            pic.getB64EmailOwner()));
+
+                                                                                            startActivity(intent);
+                                                                                        }
+
+                                                                                        v.setEnabled(true);
+                                                                                    }
+                                                                                });
+                                                                    }
+                                                                });
+
+                                                        view.findViewById(R.id.pb_homeFrag)
+                                                                .setVisibility(View.GONE);
+                                                    }
                                                 }
                                             });
-
-                                    linearLayoutArrayList.add(linearLayout);
 
                                     //picCount++;
                                     //if(picCount==15)break;
                                 }
                                 //if (picCount==15)break;
                             }
-
-                            ConstraintLayout constraintLayout= view.findViewById(R.id.cl_homeFrag_listPics);
-                            constraintLayout.removeAllViews();
-                            GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                                    new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            v.setEnabled(false);
-
-                                            mDB.child(b64Email).get().addOnCompleteListener(
-                                                    new OnCompleteListener<DataSnapshot>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                                            try{
-                                                                Intent intent=new Intent(view.getContext(),
-                                                                        viewPic.class);
-
-                                                                intent.putExtra("user",
-                                                                        new objectUser(user.getEmail(),
-                                                                                false,
-                                                                                task.getResult().child("profile_pic")
-                                                                                        .getValue().toString(),
-                                                                                task.getResult().child("username")
-                                                                                        .getValue().toString()));
-
-                                                                intent.putExtra("viewPic",
-                                                                        (objectPic)v.findViewById(R.id.iv_itemPic)
-                                                                                .getTag());
-
-                                                                startActivity(intent);
-                                                            }catch (Exception e){ //Lỗi do kích thước ảnh lớn
-                                                                Intent intent=new Intent(view.getContext(),
-                                                                        viewPic.class);
-
-                                                                intent.putExtra("user",
-                                                                        new objectUser(user.getEmail(),
-                                                                                false,
-                                                                                task.getResult().child("profile_pic")
-                                                                                        .getValue().toString(),
-                                                                                task.getResult().child("username")
-                                                                                        .getValue().toString()));
-
-                                                                objectPic pic=(objectPic)v.findViewById(R.id.iv_itemPic)
-                                                                        .getTag();
-
-                                                                intent.putExtra("viewPicMin",
-                                                                        new objectPic(pic.getKey(),
-                                                                                pic.getName(), pic.getStrHashtags(),
-                                                                                pic.getB64EmailOwner()));
-
-                                                                startActivity(intent);
-
-                                                                v.setEnabled(true);
-                                                            }
-                                                        }
-                                                    });
-
-                                        }
-                                    });
                         }
                     }
                 });

@@ -83,6 +83,7 @@
                 android:textStyle="bold"
                 android:hint="Tên của bức ảnh"
                 android:id="@+id/et_uploadImg_name"
+                android:imeOptions="actionNext"
                 />
 
             <TextView
@@ -104,6 +105,7 @@
                 android:textStyle="bold"
                 android:hint="Các tag mô tả ảnh"
                 android:id="@+id/et_uploadImg_tags"
+                android:imeOptions="actionGo"
                 />
             <TextView
                 android:layout_width="wrap_content"

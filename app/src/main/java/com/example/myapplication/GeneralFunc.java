@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
+import static android.content.Intent.makeMainSelectorActivity;
 import static androidx.core.content.ContextCompat.getSystemService;
 
 import android.app.Activity;
@@ -12,15 +13,20 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.Looper;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
@@ -30,6 +36,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -39,9 +48,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
@@ -338,4 +349,75 @@ public class GeneralFunc {
 
     }
 
+    //Ẩn keyboard
+    public  static void hideKeyboard(Context context, EditText editText){
+        ((InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE))
+                .hideSoftInputFromWindow(editText.getWindowToken(), 0);
+    }
+
+    //Xóa ảnh
+    public static  void deleteImg(DatabaseReference databaseReference, String ownerB64Email, String picKey){
+        //Xóa các mối quan hệ love
+        databaseReference.child(ownerB64Email).child("pics").child(picKey)
+                .child("lover").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if (task.isSuccessful()){
+                            for (DataSnapshot childDataSnapshot:task.getResult().getChildren()) {
+                                databaseReference.child(childDataSnapshot.getKey())
+                                        .child("love").child(ownerB64Email).child(picKey)
+                                        .removeValue();
+                            }
+                        }
+                    }
+                });
+
+        databaseReference.child(ownerB64Email).child("pics").child(picKey).removeValue();
+        databaseReference.child("fast").child(ownerB64Email).child("pics")
+                .child(picKey).removeValue();
+    }
+
+    //Tải ảnh về
+    public static void downloadImg(Context context, DatabaseReference databaseReference,
+                                   String ownerB64Email, String picKey){
+        databaseReference.child(ownerB64Email).child("pics").child(picKey)
+                .child("full").get()
+                .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        File directory = new File(Environment.getExternalStorageDirectory(),
+                                Environment.DIRECTORY_PICTURES+"/surpic");
+                        if (!directory.exists()) {
+                            directory.mkdirs();
+                        }
+
+                        //Tự động tạo file dựa vào thời gian
+                        String timeStamp = DateFormat.format("yyyyMMdd_HHmmss",
+                                new Date()).toString();
+                        String fileName = "image_" + timeStamp + ".jpeg";
+
+                        File file = new File(directory, fileName);
+
+                        try {
+                            //Lưu ảnh vào file
+                            FileOutputStream fos = new FileOutputStream(file);
+                            GeneralFunc.unzipBase64ToImg(task.getResult().getValue()
+                                    .toString()).compress(Bitmap.CompressFormat.JPEG,
+                                    100, fos);
+                            fos.close();
+
+                            //Thông báo để GALLERY cập nhật
+                            context.sendBroadcast( makeMainSelectorActivity(
+                                    android.content.Intent.ACTION_MAIN,
+                                    android.content.Intent.CATEGORY_APP_GALLERY));
+
+                            Toast.makeText(context,"Tải xuống thành công",
+                                    Toast.LENGTH_SHORT).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+    }
 }

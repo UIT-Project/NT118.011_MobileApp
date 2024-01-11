@@ -9,9 +9,13 @@ import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.view.WindowCompat;
@@ -107,6 +111,27 @@ public class uploadImg extends AppCompatActivity {
                             .setValue(binding.etUploadImgTags.getText().toString().trim());
 
                     finish();
+                }
+            });
+
+            //Chuỗi chuyển tiếp
+            binding.etUploadImgName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if(actionId== EditorInfo.IME_ACTION_NEXT){
+                        binding.etUploadImgTags.requestFocus();
+                    }
+                    return false;
+                }
+            });
+            binding.etUploadImgTags.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if(actionId==EditorInfo.IME_ACTION_GO){
+                        GeneralFunc.hideKeyboard(uploadImg.this, binding.etUploadImgTags);
+                        binding.bUploadImgUpload.performClick();
+                    }
+                    return false;
                 }
             });
         }
