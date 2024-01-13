@@ -19,15 +19,6 @@
         android:layout_height="match_parent"
         android:id="@+id/cl_profileFrag_profile"
         android:visibility="visible">
-        <ProgressBar
-            android:layout_width="128dp"
-            android:layout_height="128dp"
-            android:visibility="gone"
-            android:id="@+id/pb_profileFrag_profile"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/sv_profileFrag_profile"
-            />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -51,6 +42,7 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:paddingBottom="108px"
             android:id="@+id/sv_profileFrag_profile"
             app:layout_constraintTop_toBottomOf="@id/ll_profileFrag_topNav">
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -155,9 +147,13 @@
                     app:layout_constraintTop_toBottomOf="@id/cv_profileFrag_1"
                     >
                 </androidx.constraintlayout.widget.ConstraintLayout>
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                <ProgressBar
+                    android:layout_width="128dp"
+                    android:layout_height="128dp"
+                    android:visibility="gone"
+                    android:id="@+id/pb_profileFrag_profile"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/cl_profileFrag_listPics"
                     />
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -201,7 +197,9 @@
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            >
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">

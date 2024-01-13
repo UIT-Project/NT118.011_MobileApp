@@ -19,6 +19,8 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -82,8 +84,163 @@ public class careFrag extends Fragment {
                 cvByAcc=view.findViewById(R.id.cv_careFrag_byAcc);
         TextView tvByPic=view.findViewById(R.id.tv_careFrag_byPic),
                 tvByAcc=view.findViewById(R.id.tv_careFrag_byAcc);
+        ScrollView scrollView=view.findViewById(R.id.sv_careFrag);
+        ConstraintLayout constraintLayout= view.findViewById(R.id.cl_careFrag_list);
+        ProgressBar progressBar=view.findViewById(R.id.pb_careFrag);
 
         String b64Email=GeneralFunc.str2Base64(user.getEmail());
+        View.OnClickListener onClickImgListener=
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        scrollView.setEnabled(false);
+                        v.setEnabled(false);
+
+                        mDB.child("fast").child(b64Email).get().addOnCompleteListener(
+                                new OnCompleteListener<DataSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                        try{
+                                            Intent intent=new Intent(view.getContext(),
+                                                    viewPic.class);
+
+                                            intent.putExtra("user",
+                                                    new objectUser(b64Email,
+                                                            true,
+                                                            null,
+                                                            task.getResult().child("username")
+                                                                    .getValue().toString()));
+
+                                            intent.putExtra("viewPic",
+                                                    (objectPic)v.findViewById(R.id.iv_itemPic)
+                                                            .getTag());
+
+                                            startActivity(intent);
+                                        }catch (Exception e){ //Lỗi do kích thước ảnh lớn
+                                            Intent intent=new Intent(view.getContext(),
+                                                    viewPic.class);
+
+                                            intent.putExtra("user",
+                                                    new objectUser(b64Email,
+                                                            true,
+                                                            null,
+                                                            task.getResult().child("username")
+                                                                    .getValue().toString()));
+
+                                            objectPic pic=(objectPic)v.findViewById(R.id.iv_itemPic)
+                                                    .getTag();
+
+                                            intent.putExtra("viewPicMin",
+                                                    new objectPic(pic.getKey(),
+                                                            pic.getName(), pic.getStrHashtags(),
+                                                            pic.getB64EmailOwner()));
+
+                                            startActivity(intent);
+                                        }
+
+                                        v.setEnabled(true);
+                                        scrollView.setEnabled(true);
+                                    }
+                                });
+                    }
+                },
+                onClickAccListener=
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                mDB.child("fast").child(b64Email).get().addOnCompleteListener(
+                                        new OnCompleteListener<DataSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                Intent intent=new Intent(view.getContext(),
+                                                        viewUser.class);
+
+                                                intent.putExtra("user",
+                                                        new objectUser(b64Email,
+                                                                true,
+                                                                null,
+                                                                task.getResult().child("username")
+                                                                        .getValue().toString()));
+
+                                                intent.putExtra("targetUserB64Email",
+                                                        GeneralFunc.str2Base64(
+                                                                ((TextView)v.findViewById(
+                                                                        R.id.tv_itemUser_email))
+                                                                        .getText().toString()));
+
+                                                startActivity(intent);
+                                            }
+                                        });
+                            }
+                        };
+
+        //Danh sách ảnh yêu thích
+        OnCompleteListener imgListListener=new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                progressBar.setVisibility(View.VISIBLE);
+
+                ArrayList<LinearLayout>linearLayoutArrayList=new ArrayList<LinearLayout>();
+                ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
+                int picCount=0;
+
+                for (DataSnapshot childSnapshot: task.getResult().getChildren()) {
+                    for (DataSnapshot childSnapshot1: childSnapshot.getChildren()) {
+                        String ownerB64Email=childSnapshot.getKey(),
+                                picKey=childSnapshot1.getKey();
+
+                        dummyList.add(true);
+
+                        mDB.child("fast").child(ownerB64Email).child("pics")
+                                .child(picKey).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                        DataSnapshot snapshot=task.getResult();
+
+                                        mDB.child(ownerB64Email).child("pics")
+                                                .child(picKey).child("data")
+                                                .get().addOnCompleteListener(
+                                                        new OnCompleteListener<DataSnapshot>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                DataSnapshot dataSnapshot=task.getResult();
+                                                                objectPic pic=new objectPic(
+                                                                        picKey,
+                                                                        String.valueOf(dataSnapshot
+                                                                                .getValue()),
+                                                                        String.valueOf(snapshot
+                                                                                .child("name").getValue()),
+                                                                        String.valueOf(snapshot
+                                                                                .child("tags").getValue()),
+                                                                        ownerB64Email);
+
+                                                                LinearLayout linearLayout=GeneralFunc.itemPic(
+                                                                        view.getContext(), pic);
+                                                                linearLayoutArrayList.add(linearLayout);
+
+                                                                if(linearLayoutArrayList.size()==dummyList.size()){
+                                                                    constraintLayout.removeAllViews();
+                                                                    GeneralFunc.items2Layout(
+                                                                            constraintLayout,
+                                                                            linearLayoutArrayList,
+                                                                            onClickImgListener);
+
+                                                                    progressBar.setVisibility(View.GONE);
+                                                                }
+                                                            }
+                                                        });
+                                    }
+                                });
+
+                        picCount++;
+                        if(picCount==10)break;
+                    }
+                    if (picCount==10)break;
+                }
+            }
+        };
+        mDB.child(b64Email).child("love").get().addOnCompleteListener(imgListListener);
+
 
         //Click "Hình ảnh"
         cvByPic.setOnClickListener(new View.OnClickListener() {
@@ -93,7 +250,7 @@ public class careFrag extends Fragment {
                     return;
                 }
 
-                view.findViewById(R.id.pb_careFrag).setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.VISIBLE);
 
                 cvByPic.setBackgroundTintList(ContextCompat.getColorStateList(view.getContext(),
                         R.color.orange_brown));
@@ -106,104 +263,7 @@ public class careFrag extends Fragment {
                         R.color.orange_brown));
 
                 //Danh sách ảnh yêu thích
-                mDB.child(b64Email).child("love").get().addOnCompleteListener(
-                        new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                ArrayList<LinearLayout>linearLayoutArrayList=new ArrayList<LinearLayout>();
-
-                                for (DataSnapshot childSnapshot: task.getResult().getChildren()) {
-                                    for (DataSnapshot childSnapshot1: childSnapshot.getChildren()) {
-                                        String ownerB64Email=childSnapshot.getKey(),
-                                                picKey=childSnapshot1.getKey();
-
-                                        LinearLayout linearLayout=GeneralFunc.itemPic(
-                                                view.getContext(),
-                                                new objectPic(picKey,"","","",
-                                                        ownerB64Email));
-
-                                        mDB.child(ownerB64Email).child("pics")
-                                                .child(picKey).get().addOnCompleteListener(
-                                                        new OnCompleteListener<DataSnapshot>() {
-                                                            @Override
-                                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                                                DataSnapshot dataSnapshot=task.getResult();
-                                                                objectPic pic=new objectPic(
-                                                                        dataSnapshot.getKey(),
-                                                                        String.valueOf(dataSnapshot.child("data").getValue()),
-                                                                        String.valueOf(dataSnapshot.child("name").getValue()),
-                                                                        String.valueOf(dataSnapshot.child("tags").getValue()),
-                                                                        ownerB64Email);
-
-                                                                CardView cardView=(CardView) linearLayout.getChildAt(0);
-
-                                                                ImageView imageView = (ImageView) cardView.getChildAt(0);
-                                                                imageView.setImageBitmap(unzipBase64ToImg(pic.getData()));
-                                                                imageView.setTag(pic);
-                                                            }
-                                                        });
-
-                                        linearLayoutArrayList.add(linearLayout);
-                                    }
-                                }
-
-                                ConstraintLayout constraintLayout= view.findViewById(R.id.cl_careFrag_list);
-                                constraintLayout.removeAllViews();
-                                GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                                        new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                mDB.child(b64Email).get().addOnCompleteListener(
-                                                        new OnCompleteListener<DataSnapshot>() {
-                                                            @Override
-                                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                                                try{
-                                                                    Intent intent=new Intent(view.getContext(),
-                                                                            viewPic.class);
-
-                                                                    intent.putExtra("user",
-                                                                            new objectUser(user.getEmail(),
-                                                                                    false,
-                                                                                    task.getResult().child("profile_pic")
-                                                                                            .getValue().toString(),
-                                                                                    task.getResult().child("username")
-                                                                                            .getValue().toString()));
-
-                                                                    intent.putExtra("viewPic",
-                                                                            (objectPic)v.findViewById(R.id.iv_itemPic)
-                                                                                    .getTag());
-
-                                                                    startActivity(intent);
-                                                                }catch (Exception e){ //Lỗi do kích thước ảnh lớn
-                                                                    Intent intent=new Intent(view.getContext(),
-                                                                            viewPic.class);
-
-                                                                    intent.putExtra("user",
-                                                                            new objectUser(user.getEmail(),
-                                                                                    false,
-                                                                                    task.getResult().child("profile_pic")
-                                                                                            .getValue().toString(),
-                                                                                    task.getResult().child("username")
-                                                                                            .getValue().toString()));
-
-                                                                    objectPic pic=(objectPic)v.findViewById(R.id.iv_itemPic)
-                                                                            .getTag();
-
-                                                                    intent.putExtra("viewPicMin",
-                                                                            new objectPic(pic.getKey(),
-                                                                                    pic.getName(), pic.getStrHashtags(),
-                                                                                    pic.getB64EmailOwner()));
-
-                                                                    startActivity(intent);
-                                                                }
-                                                            }
-                                                        });
-                                            }
-                                        });
-
-                                view.findViewById(R.id.pb_careFrag).setVisibility(View.GONE);
-                            }
-                        });
+                mDB.child(b64Email).child("love").get().addOnCompleteListener(imgListListener);
 
             }
         });
@@ -215,8 +275,9 @@ public class careFrag extends Fragment {
                 if(!isByPic(view.getContext(),cvByPic)){
                     return;
                 }
+                constraintLayout.removeAllViews();
 
-                view.findViewById(R.id.pb_careFrag).setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.VISIBLE);
 
                 cvByAcc.setBackgroundTintList(ContextCompat.getColorStateList(view.getContext(),
                         R.color.orange_brown));
@@ -233,199 +294,257 @@ public class careFrag extends Fragment {
                         new OnCompleteListener<DataSnapshot>() {
                             @Override
                             public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                ArrayList<LinearLayout>linearLayoutArrayList=new ArrayList<LinearLayout>();
+                                if(task.isSuccessful()){
+                                    ArrayList<LinearLayout>linearLayoutArrayList=new ArrayList<LinearLayout>();
+                                    ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
+                                    int userCount=0;
 
-                                for (DataSnapshot childSnapshot: task.getResult().getChildren()) {
-                                    String targetB64Email=childSnapshot.getKey();
+                                    for (DataSnapshot childSnapshot: task.getResult().getChildren()) {
+                                        String targetB64Email=childSnapshot.getKey();
 
-                                    LinearLayout linearLayout=GeneralFunc.itemUser(
-                                            view.getContext(),
-                                            new objectUser(
-                                                    targetB64Email,
-                                                    true,
-                                                    "",""));
+                                        dummyList.add(true);
 
-                                    mDB.child(targetB64Email).get().addOnCompleteListener(
-                                            new OnCompleteListener<DataSnapshot>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                                    DataSnapshot dataSnapshot=task.getResult();
-                                                    objectUser user1=new objectUser(
-                                                            targetB64Email, true,
-                                                            String.valueOf(
-                                                                    dataSnapshot
-                                                                            .child("profile_pic")
-                                                                            .getValue()),
-                                                            String.valueOf(
-                                                                    dataSnapshot
-                                                                            .child("username")
-                                                                            .getValue()));
-
-                                                    CardView cardView=(CardView) linearLayout
-                                                            .getChildAt(0);
-                                                    ImageView imageView=(ImageView)cardView
-                                                            .getChildAt(0);
-
-                                                    LinearLayout linearLayout1 =
-                                                            (LinearLayout) linearLayout
-                                                                    .getChildAt(1);
-                                                    TextView name =(TextView) linearLayout1
-                                                            .getChildAt(0),
-                                                            email =(TextView)linearLayout1
-                                                                    .getChildAt(1);
-
-                                                    imageView.setImageBitmap(
-                                                            unzipBase64ToImg(user1.getDataUserPic()));
-                                                    imageView.setTag(user1);
-                                                    name.setText(user1.getUsername());
-                                                    email.setText(base64ToStr(user1.getB64Email()));
-                                                }
-                                            });
-
-                                    linearLayoutArrayList.add(linearLayout);
-                                }
-
-                                ConstraintLayout constraintLayout=
-                                        view.findViewById(R.id.cl_careFrag_list);
-                                constraintLayout.removeAllViews();
-                                GeneralFunc.itemsUser2Layout(constraintLayout, linearLayoutArrayList,
-                                        new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                mDB.child(b64Email).get().addOnCompleteListener(
+                                        mDB.child("fast").child(targetB64Email).get()
+                                                .addOnCompleteListener(
                                                         new OnCompleteListener<DataSnapshot>() {
                                                             @Override
-                                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                                                Intent intent=new Intent(view.getContext(),
-                                                                        viewUser.class);
+                                                            public void onComplete(@NonNull Task<DataSnapshot>
+                                                                                           task)
+                                                            {
+                                                                if(task.isSuccessful()){
+                                                                    DataSnapshot dataSnapshot=task.getResult();
 
-                                                                intent.putExtra("user",
-                                                                        new objectUser(
-                                                                                user.getEmail(),
-                                                                                false,
-                                                                                task.getResult()
-                                                                                        .child("profile_pic")
-                                                                                        .getValue().toString(),
-                                                                                task.getResult()
-                                                                                        .child("username")
-                                                                                        .getValue().toString()));
+                                                                    String username =
+                                                                            String.valueOf(dataSnapshot.child(
+                                                                                    "username").getValue());
 
-                                                                intent.putExtra("targetUserB64Email",
-                                                                        GeneralFunc.str2Base64(
-                                                                                ((TextView)v.findViewById(
-                                                                                        R.id.tv_itemUser_email))
-                                                                                        .getText().toString()));
+                                                                    mDB.child(targetB64Email).child("profile_pic")
+                                                                            .get().addOnCompleteListener(
+                                                                                    new OnCompleteListener<DataSnapshot>() {
+                                                                                        @Override
+                                                                                        public void onComplete(@NonNull Task<DataSnapshot> task)
+                                                                                        {
+                                                                                            if(task.isSuccessful()){
+                                                                                                DataSnapshot dataSnapshot1=task.getResult();
+                                                                                                objectUser user1=new objectUser(
+                                                                                                        targetB64Email, true,
+                                                                                                        String.valueOf(
+                                                                                                                dataSnapshot1
+                                                                                                                        .getValue()),
+                                                                                                        username);
 
-                                                                startActivity(intent);
+                                                                                                LinearLayout linearLayout=GeneralFunc.itemUser(
+                                                                                                        view.getContext(), user1);
+                                                                                                linearLayoutArrayList.add(linearLayout);
+
+                                                                                                if(linearLayoutArrayList.size()==dummyList.size()){
+                                                                                                    constraintLayout.removeAllViews();
+                                                                                                    GeneralFunc.itemsUser2Layout(
+                                                                                                            constraintLayout,
+                                                                                                            linearLayoutArrayList,
+                                                                                                            onClickAccListener);
+                                                                                                    progressBar.setVisibility(View.GONE);
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    });
+                                                                }
+
                                                             }
                                                         });
-                                            }
-                                        });
 
-                                view.findViewById(R.id.pb_careFrag).setVisibility(View.GONE);
+                                        userCount++;
+                                        if(userCount>20) break;
+                                    }
+
+                                    if(dummyList.size()==0)progressBar.setVisibility(View.GONE);
+                                }
                             }
                         });
             }
         });
 
-        //Danh sách ảnh yêu thích
-        mDB.child(b64Email).child("love").get().addOnCompleteListener(
-                new OnCompleteListener<DataSnapshot>() {
+        //Tải thêm item
+        scrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
             @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                ArrayList<LinearLayout>linearLayoutArrayList=new ArrayList<LinearLayout>();
+            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                if(scrollY == ((ScrollView)v).getChildAt(0).getMeasuredHeight()-v.getMeasuredHeight()){
+                    if(constraintLayout.getChildCount()%10!=0){
+                        scrollView.setOnScrollChangeListener(null);
+                        return;
+                    }
 
-                for (DataSnapshot childSnapshot: task.getResult().getChildren()) {
-                    for (DataSnapshot childSnapshot1: childSnapshot.getChildren()) {
-                        String ownerB64Email=childSnapshot.getKey(),
-                                picKey=childSnapshot1.getKey();
+                    progressBar.setVisibility(View.VISIBLE);
 
-                        LinearLayout linearLayout=GeneralFunc.itemPic(
-                                view.getContext(),
-                                new objectPic(picKey,"","","",
-                                        ownerB64Email));
-
-                        mDB.child(ownerB64Email).child("pics")
-                                .child(picKey).get().addOnCompleteListener(
-                                        new OnCompleteListener<DataSnapshot>() {
+                    if(isByPic(view.getContext(),cvByPic)){
+                        //Lấy danh sách ảnh yêu thích
+                        mDB.child(b64Email).child("love").get().addOnCompleteListener(
+                                new OnCompleteListener<DataSnapshot>() {
                                     @Override
                                     public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                        DataSnapshot dataSnapshot=task.getResult();
-                                        objectPic pic=new objectPic(
-                                                dataSnapshot.getKey(),
-                                                String.valueOf(dataSnapshot.child("data").getValue()),
-                                                String.valueOf(dataSnapshot.child("name").getValue()),
-                                                String.valueOf(dataSnapshot.child("tags").getValue()),
-                                                ownerB64Email);
+                                        if(task.isSuccessful()){
+                                            ArrayList<LinearLayout> linearLayoutArrayList =
+                                                    new ArrayList<LinearLayout>();
+                                            ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
+                                            ArrayList<String> picKeys=new ArrayList<String>();
 
-                                        CardView cardView=(CardView) linearLayout.getChildAt(0);
+                                            //Danh sách key của ảnh đã đc tải trc đó
+                                            int c=constraintLayout.getChildCount();
+                                            for (int i=0;i<c;i++) {
+                                                objectPic pic=(objectPic) ((ImageView)
+                                                        ((LinearLayout)constraintLayout.getChildAt(i))
+                                                                .getChildAt(0)).getTag();
+                                                picKeys.add(pic.getKey());
+                                            }
 
-                                        ImageView imageView = (ImageView) cardView.getChildAt(0);
-                                        imageView.setImageBitmap(unzipBase64ToImg(pic.getData()));
-                                        imageView.setTag(pic);
+                                            int picCount=0;
+
+                                            for (DataSnapshot childSnapshot: task.getResult().getChildren()) {
+                                                for (DataSnapshot childSnapshot1: childSnapshot.getChildren()) {
+                                                    if(picKeys.contains(childSnapshot1.getKey()))continue;
+
+                                                    String ownerB64Email=childSnapshot.getKey(),
+                                                            picKey=childSnapshot1.getKey();
+
+                                                    dummyList.add(true);
+
+                                                    mDB.child("fast").child(ownerB64Email)
+                                                            .child("pics")
+                                                            .child(picKey).get()
+                                                            .addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                                                                @Override
+                                                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                    DataSnapshot snapshot=task.getResult();
+
+                                                                    mDB.child(ownerB64Email).child("pics")
+                                                                            .child(picKey).child("data")
+                                                                            .get().addOnCompleteListener(
+                                                                                    new OnCompleteListener<DataSnapshot>() {
+                                                                                        @Override
+                                                                                        public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                                            DataSnapshot dataSnapshot=task.getResult();
+                                                                                            objectPic pic=new objectPic(
+                                                                                                    picKey,
+                                                                                                    String.valueOf(dataSnapshot
+                                                                                                            .getValue()),
+                                                                                                    String.valueOf(snapshot
+                                                                                                            .child("name").getValue()),
+                                                                                                    String.valueOf(snapshot
+                                                                                                            .child("tags").getValue()),
+                                                                                                    ownerB64Email);
+
+                                                                                            LinearLayout linearLayout=GeneralFunc.itemPic(
+                                                                                                    view.getContext(), pic);
+                                                                                            linearLayoutArrayList.add(linearLayout);
+
+                                                                                            if(linearLayoutArrayList.size()==dummyList.size()){
+                                                                                                constraintLayout.removeAllViews();
+                                                                                                GeneralFunc.moreItems2Layout(
+                                                                                                        constraintLayout,
+                                                                                                        linearLayoutArrayList,
+                                                                                                        onClickImgListener);
+
+                                                                                                progressBar.setVisibility(View.GONE);
+                                                                                            }
+                                                                                        }
+                                                                                    });
+                                                                }
+                                                            });
+
+                                                    picCount++;
+                                                    if(picCount==10)break;
+                                                }
+                                                if (picCount==10)break;
+                                            }
+                                            if (dummyList.size()==0)
+                                                progressBar.setVisibility(View.GONE);
+
+                                        }
+
                                     }
                                 });
+                    }else {
+                        //Lấy danh sách tk theo dõi
+                        mDB.child(b64Email).child("follow").get().addOnCompleteListener(
+                                new OnCompleteListener<DataSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                        if(task.isSuccessful()){
+                                            ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
+                                            ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
+                                            ArrayList<String> accs=new ArrayList<String>();
 
-                        linearLayoutArrayList.add(linearLayout);
-                    }
-                }
-
-                ConstraintLayout constraintLayout= view.findViewById(R.id.cl_careFrag_list);
-                constraintLayout.removeAllViews();
-                GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                        new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                mDB.child(b64Email).get().addOnCompleteListener(
-                                        new OnCompleteListener<DataSnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                                try{
-                                                    Intent intent=new Intent(view.getContext(),
-                                                            viewPic.class);
-
-                                                    intent.putExtra("user",
-                                                            new objectUser(user.getEmail(),
-                                                                    false,
-                                                                    task.getResult().child("profile_pic")
-                                                                            .getValue().toString(),
-                                                                    task.getResult().child("username")
-                                                                            .getValue().toString()));
-
-                                                    intent.putExtra("viewPic",
-                                                            (objectPic)v.findViewById(R.id.iv_itemPic)
-                                                                    .getTag());
-
-                                                    startActivity(intent);
-                                                }catch (Exception e){ //Lỗi do kích thước ảnh lớn
-                                                    Intent intent=new Intent(view.getContext(),
-                                                            viewPic.class);
-
-                                                    intent.putExtra("user",
-                                                            new objectUser(user.getEmail(),
-                                                                    false,
-                                                                    task.getResult().child("profile_pic")
-                                                                            .getValue().toString(),
-                                                                    task.getResult().child("username")
-                                                                            .getValue().toString()));
-
-                                                    objectPic pic=(objectPic)v.findViewById(R.id.iv_itemPic)
-                                                            .getTag();
-
-                                                    intent.putExtra("viewPicMin",
-                                                            new objectPic(pic.getKey(),
-                                                                    pic.getName(), pic.getStrHashtags(),
-                                                                    pic.getB64EmailOwner()));
-
-                                                    startActivity(intent);
+                                            //Danh sách key của ảnh đã đc tải trc đó
+                                            int c=constraintLayout.getChildCount();
+                                            for (int i=0;i<c;i++) {
+                                                String tgB64Email=String.valueOf( ((ImageView)
+                                                        ((LinearLayout)constraintLayout.getChildAt(i))
+                                                                .getChildAt(0)).getTag());
+                                                if(!accs.contains(tgB64Email)){
+                                                    accs.add(tgB64Email);
                                                 }
                                             }
-                                        });
-                            }
-                        });
 
-                view.findViewById(R.id.pb_careFrag).setVisibility(View.GONE);
+                                            int userCount=0;
 
+                                            for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                                if(accs.contains(childSnapShot.getKey()))continue;
+
+                                                String targetB64Email=childSnapShot.getKey();
+
+                                                dummyList.add(true);
+
+                                                mDB.child("fast").child(targetB64Email).get()
+                                                        .addOnCompleteListener(
+                                                                new OnCompleteListener<DataSnapshot>() {
+                                                                    @Override
+                                                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                        DataSnapshot dataSnapshot=task.getResult();
+
+                                                                        String username =
+                                                                                String.valueOf(dataSnapshot.child(
+                                                                                        "username").getValue());
+
+                                                                        mDB.child(targetB64Email).child("profile_pic")
+                                                                                .get().addOnCompleteListener(
+                                                                                        new OnCompleteListener<DataSnapshot>() {
+                                                                                            @Override
+                                                                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                                                                DataSnapshot dataSnapshot1=task.getResult();
+                                                                                                objectUser user1=new objectUser(
+                                                                                                        targetB64Email, true,
+                                                                                                        String.valueOf(
+                                                                                                                dataSnapshot1
+                                                                                                                        .getValue()),
+                                                                                                        username);
+
+                                                                                                LinearLayout linearLayout=GeneralFunc.itemUser(
+                                                                                                        view.getContext(), user1);
+                                                                                                linearLayoutArrayList.add(linearLayout);
+
+                                                                                                if(linearLayoutArrayList.size()==dummyList.size()){
+                                                                                                    constraintLayout.removeAllViews();
+                                                                                                    GeneralFunc.moreItemsUser2Layout(
+                                                                                                            constraintLayout,
+                                                                                                            linearLayoutArrayList,
+                                                                                                            onClickAccListener);
+                                                                                                    progressBar.setVisibility(View.GONE);
+                                                                                                }
+                                                                                            }
+                                                                                        });
+
+                                                                    }
+                                                                });
+                                                userCount++;
+                                                if(userCount>20) break;
+                                            }
+                                            if (dummyList.size()==0)
+                                                progressBar.setVisibility(View.GONE);
+                                        }
+                                    }
+                                });
+                    }
+                }
             }
         });
 

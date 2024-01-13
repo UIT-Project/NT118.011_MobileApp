@@ -212,8 +212,8 @@ public class GeneralFunc {
         imageView.setImageBitmap(unzipBase64ToImg(pic.getData()));
         imageView.setTag(pic);
 
-        linearLayout.setTag((float)(imageView.getDrawable().getIntrinsicHeight()/
-                imageView.getDrawable().getIntrinsicWidth()));
+        linearLayout.setTag(((float)imageView.getDrawable().getIntrinsicHeight())/
+                ((float) imageView.getDrawable().getIntrinsicWidth()));
 
         return linearLayout;
     }
@@ -237,7 +237,7 @@ public class GeneralFunc {
                 email=(TextView)linearLayout1.getChildAt(1);
 
         imageView.setImageBitmap(unzipBase64ToImg(user.getDataUserPic()));
-        imageView.setTag(user);
+        imageView.setTag(user.getB64Email());
         name.setText(user.getUsername());
         email.setText(base64ToStr(user.getB64Email()));
 
@@ -252,15 +252,6 @@ public class GeneralFunc {
         int idLast0= ConstraintSet.PARENT_ID, idLast1=ConstraintSet.PARENT_ID;
 
         for(int i=0;i<linearLayoutArrayList.size();i++){
-            //Cập nhật tổng chiều cao
-            if(i>0) {
-                if(height0<=height1){
-                    height0+=(float)constraintLayout.getChildAt(i-1).getTag();
-                }else {
-                    height1+=(float)constraintLayout.getChildAt(i-1).getTag();
-                }
-            }
-
             LinearLayout linearLayout=linearLayoutArrayList.get(i);
 
             //Sự kiện click ảnh
@@ -301,9 +292,12 @@ public class GeneralFunc {
                 }
             }
 
+            //Cập nhật các thông số cho vòng tiếp theo
             if(height0<=height1){
+                height0+=(float)linearLayout.getTag();
                 idLast0=linearLayout.getId();
             }else {
+                height1+=(float)linearLayout.getTag();
                 idLast1=linearLayout.getId();
             }
 
@@ -312,7 +306,66 @@ public class GeneralFunc {
 
         constraintLayout.setTag(R.id.height0,height0);
         constraintLayout.setTag(R.id.height1,height1);
+        constraintLayout.setTag(R.id.idLast0,idLast0);
+        constraintLayout.setTag(R.id.idLast1,idLast1);
+    }
+    public static void moreItems2Layout(ConstraintLayout constraintLayout,
+                                    ArrayList<LinearLayout> linearLayoutArrayList,
+                                    View.OnClickListener onItemClickListener){
+        float height0=(float)constraintLayout.getTag(R.id.height0),
+                height1=(float) constraintLayout.getTag(R.id.height1);
+        int idLast0=(int)constraintLayout.getTag(R.id.idLast0),
+                idLast1=(int)constraintLayout.getTag(R.id.idLast1);
 
+        for(int i=0;i<linearLayoutArrayList.size();i++){
+            LinearLayout linearLayout=linearLayoutArrayList.get(i);
+
+            //Sự kiện click ảnh
+            linearLayout.setOnClickListener(onItemClickListener);
+
+            constraintLayout.addView(linearLayout);
+
+            ConstraintSet constraintSet=new ConstraintSet();
+            constraintSet.clone(constraintLayout);
+
+            //Thiết lập các ràng buộc
+            if(height0<=height1){
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.START,
+                        ConstraintSet.PARENT_ID, ConstraintSet.START);
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.END,
+                        idLast1, ConstraintSet.START);
+
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
+                        idLast0, ConstraintSet.BOTTOM);
+            }else {
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.END,
+                        ConstraintSet.PARENT_ID, ConstraintSet.END);
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.START,
+                        idLast0, ConstraintSet.END);
+
+                constraintSet.connect(idLast0, ConstraintSet.END,
+                        linearLayout.getId(), ConstraintSet.START);
+
+                constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
+                        idLast1, ConstraintSet.BOTTOM);
+            }
+
+            //Cập nhật các thông số cho vòng tiếp theo
+            if(height0<=height1){
+                height0+=(float)linearLayout.getTag();
+                idLast0=linearLayout.getId();
+            }else {
+                height1+=(float)linearLayout.getTag();
+                idLast1=linearLayout.getId();
+            }
+
+            constraintSet.applyTo(constraintLayout);
+        }
+
+        constraintLayout.setTag(R.id.height0,height0);
+        constraintLayout.setTag(R.id.height1,height1);
+        constraintLayout.setTag(R.id.idLast0,idLast0);
+        constraintLayout.setTag(R.id.idLast1,idLast1);
     }
 
     //Đưa item user vào giao diện
@@ -320,6 +373,7 @@ public class GeneralFunc {
                                     ArrayList<LinearLayout> linearLayoutArrayList,
                                     View.OnClickListener onItemClickListener){
 
+        int idLast=ConstraintSet.PARENT_ID;
         for(int i=0;i<linearLayoutArrayList.size();i++){
             LinearLayout linearLayout=linearLayoutArrayList.get(i);
 
@@ -341,11 +395,48 @@ public class GeneralFunc {
                         ConstraintSet.PARENT_ID, ConstraintSet.TOP);
             }else {
                 constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
-                        linearLayoutArrayList.get(i-1).getId(), ConstraintSet.BOTTOM);
+                        idLast, ConstraintSet.BOTTOM);
             }
 
             constraintSet.applyTo(constraintLayout);
+
+            idLast=linearLayout.getId();
         }
+
+        constraintLayout.setTag(R.id.idLast0,idLast);
+
+    }
+
+    //Đưa thêm item user vào giao diện
+    public static void moreItemsUser2Layout(ConstraintLayout constraintLayout,
+                                        ArrayList<LinearLayout> linearLayoutArrayList,
+                                        View.OnClickListener onItemClickListener){
+
+        int idLast=(int)constraintLayout.getTag(R.id.idLast0);
+        for(int i=0;i<linearLayoutArrayList.size();i++){
+            LinearLayout linearLayout=linearLayoutArrayList.get(i);
+
+            //Sự kiện click tk
+            linearLayout.setOnClickListener(onItemClickListener);
+
+            constraintLayout.addView(linearLayout);
+
+            ConstraintSet constraintSet=new ConstraintSet();
+            constraintSet.clone(constraintLayout);
+
+            //Thiết lập các ràng buộc
+            constraintSet.connect(linearLayout.getId(), ConstraintSet.START,
+                    ConstraintSet.PARENT_ID, ConstraintSet.START);
+
+            constraintSet.connect(linearLayout.getId(), ConstraintSet.TOP,
+                    idLast, ConstraintSet.BOTTOM);
+
+            constraintSet.applyTo(constraintLayout);
+
+            idLast=linearLayout.getId();
+        }
+
+        constraintLayout.setTag(R.id.idLast0,idLast);
 
     }
 

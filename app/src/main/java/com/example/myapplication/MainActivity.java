@@ -51,18 +51,7 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                .detectDiskReads()
-                .detectDiskWrites()
-                .detectNetwork()   // or .detectAll() for all detectable problems
-                .penaltyLog()
-                .build());
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+        StrictMode.allowThreadDiskReads();
 
         //Khởi tạo act
         super.onCreate(savedInstanceState);
@@ -76,6 +65,10 @@ public class MainActivity extends AppCompatActivity {
         GeneralFunc.askPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE);
         GeneralFunc.askPermission(this, Manifest.permission.ACCESS_NETWORK_STATE);
 
+        if(!GeneralFunc.hasInternet(this)){
+            binding.tvMainNoInternet.setVisibility(View.VISIBLE);
+            return;
+        }
         //Kết nối FB Realtime DB
         firebaseDatabase=FirebaseDatabase.getInstance(
                 "https://surpic-324b6-default-rtdb.asia-southeast1.firebasedatabase.app");

@@ -6,4 +6,6 @@
     <item name="name" type="id"/>
     <item name="tags" type="id"/>
     <item name="isZip" type="id"/>
+    <item name="idLast0" type="id"/>
+    <item name="idLast1" type="id"/>
 </resources>

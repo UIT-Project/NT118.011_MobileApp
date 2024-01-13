@@ -24,20 +24,15 @@
                     app:layout_constraintTop_toTopOf="parent"
                     >
                 </androidx.constraintlayout.widget.ConstraintLayout>
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:id="@+id/dummy"
+                <ProgressBar
+                    android:layout_width="128dp"
+                    android:layout_height="128dp"
+                    android:layout_marginTop="6dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/cl_homeFrag_listPics"
-                    />
+                    android:id="@+id/pb_homeFrag"/>
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
-        <ProgressBar
-            android:layout_width="128dp"
-            android:layout_height="128dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/sv_homeFrag"
-            android:id="@+id/pb_homeFrag"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

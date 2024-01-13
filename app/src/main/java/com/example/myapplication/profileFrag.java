@@ -41,6 +41,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -119,8 +121,15 @@ public class profileFrag extends Fragment {
         ImageView userPic=view.findViewById(R.id.iv_profileFrag_profilePic);
         TextView tv_username=view.findViewById(R.id.tv_profileFrag_username),
                 tv_follower_follow=view.findViewById(R.id.tv_profileFrag_follower_follow);
-        ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.VISIBLE);
-        ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(View.GONE);
+        ProgressBar progressBar=view.findViewById(R.id.pb_profileFrag),
+                progressBarProfile=view.findViewById(R.id.pb_profileFrag_profile);
+        ConstraintLayout cl_profile=view.findViewById(R.id.cl_profileFrag_profile),
+                cl_vp=view.findViewById(R.id.cl_profileFrag_viewPic);
+        FloatingActionButton fab_vp_back=view.findViewById(R.id.fab_profileFrag_vP_back);
+        ScrollView scrollView=view.findViewById(R.id.sv_profileFrag_profile);
+
+        progressBar.setVisibility(View.VISIBLE);
+        cl_profile.setVisibility(View.GONE);
 
         //Tải ảnh đại diện
         mDB.child(b64Email).child(view.getContext().getString(R.string.profile_pic)).get()
@@ -129,9 +138,8 @@ public class profileFrag extends Fragment {
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 userPic.setImageBitmap(GeneralFunc.unzipBase64ToImg(String.valueOf(
                         task.getResult().getValue())));
-                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                        View.VISIBLE);
-                ((ProgressBar)view.findViewById(R.id.pb_profileFrag)).setVisibility(View.GONE);
+                cl_profile.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
                 view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.VISIBLE);
             }
         });
@@ -173,60 +181,86 @@ public class profileFrag extends Fragment {
                 });
 
         //Lấy danh sách ảnh của tài khoản
-        mDB.child(b64Email).child("pics").get().addOnCompleteListener(
+        mDB.child("fast").child(b64Email).child("pics").get().addOnCompleteListener(
                 new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 if(task.isSuccessful()){
                     ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
+                    ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
+
+                    int picCount=0;
                     for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                        LinearLayout linearLayout=GeneralFunc.itemPic(view.getContext(),new objectPic(
-                                childSnapShot.getKey(),
-                                String.valueOf(childSnapShot.child("data").getValue()),
-                                String.valueOf(childSnapShot.child("name").getValue()),
-                                String.valueOf(childSnapShot.child("tags").getValue()),
-                                b64Email));
-                        linearLayoutArrayList.add(linearLayout);
+                        dummyList.add(true);
+
+                        mDB.child(b64Email).child("pics")
+                                .child(childSnapShot.getKey()).child("data").get().addOnCompleteListener(
+                                        new OnCompleteListener<DataSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                DataSnapshot dataSnapshot=task.getResult();
+                                                objectPic pic=new objectPic(
+                                                        childSnapShot.getKey(),
+                                                        String.valueOf(dataSnapshot.getValue()),
+
+                                                        String.valueOf(childSnapShot.child(
+                                                                "name").getValue()),
+
+                                                        String.valueOf(childSnapShot.child(
+                                                                "tags").getValue()),
+                                                        b64Email);
+
+                                                LinearLayout linearLayout=GeneralFunc.itemPic(
+                                                        view.getContext(), pic);
+                                                linearLayoutArrayList.add(linearLayout);
+
+                                                if(linearLayoutArrayList.size()==dummyList.size())
+                                                {
+                                                    ConstraintLayout constraintLayout= view.findViewById(R.id.cl_profileFrag_listPics);
+                                                    constraintLayout.removeAllViews();
+                                                    GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
+                                                            new View.OnClickListener() {
+                                                                @Override
+                                                                public void onClick(View v) {
+                                                                    scrollView.setEnabled(false);
+
+                                                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                                                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                                                    vpImg.setTag(selectedImg.getTag());
+                                                                    vpImg.setTag(R.id.isZip,true);
+
+                                                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                                                            tv_username.getText().toString());
+
+                                                                    objectPic pic=(objectPic)selectedImg.getTag();
+                                                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                                                                "Tên ảnh: "+pic.getName());
+                                                                    }
+                                                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                                                                "Tags: "+pic.getStrHashtags());
+                                                                    }
+
+                                                                    cl_profile.setVisibility(View.GONE);
+                                                                    cl_vp.setVisibility(View.VISIBLE);
+                                                                    scrollView.setEnabled(true);
+                                                                }
+                                                            });
+
+                                                    progressBarProfile.setVisibility(View.GONE);
+                                                }
+                                            }
+                                        });
+                        picCount++;
+                        if(picCount==5)break;
                     }
-
-                    ConstraintLayout constraintLayout= view.findViewById(R.id.cl_profileFrag_listPics);
-                    constraintLayout.removeAllViews();
-                    GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                            new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                    vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
-                            vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                            vpImg.setTag(selectedImg.getTag());
-                            vpImg.setTag(R.id.isZip,true);
-
-                            ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
-                                    ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                            ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
-                                    tv_username.getText().toString());
-
-                            objectPic pic=(objectPic)selectedImg.getTag();
-                            if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
-                                        "Tên ảnh: "+pic.getName());
-                            }
-                            if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
-                                        "Tags: "+pic.getStrHashtags());
-                            }
-
-                            ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                                    View.GONE);
-                            ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
-                                    View.VISIBLE);
-                        }
-                    });
                 }
-                view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.GONE);
             }
         });
-
 
         //Nút setting
         ImageButton imageButton = view.findViewById(R.id.ib_profile_setting);
@@ -287,7 +321,7 @@ public class profileFrag extends Fragment {
         });
 
         //Sự kiện click quay về
-        ((FloatingActionButton)view.findViewById(R.id.fab_profileFrag_vP_back)).setOnClickListener(new View.OnClickListener() {
+        fab_vp_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ImageView iv_profileFrag_vP_img=view.findViewById(R.id.iv_profileFrag_vP_img);
@@ -300,10 +334,8 @@ public class profileFrag extends Fragment {
                 ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText("");
                 ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText("");
 
-                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                        View.VISIBLE);
-                ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
-                        View.GONE);
+                cl_profile.setVisibility(View.VISIBLE);
+                cl_vp.setVisibility(View.GONE);
             }
         });
 
@@ -359,6 +391,7 @@ public class profileFrag extends Fragment {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     GeneralFunc.deleteImg(mDB,b64Email,pic.getKey());
+                                    fab_vp_back.performClick();
                                 }
                             });
                             builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
@@ -389,14 +422,12 @@ public class profileFrag extends Fragment {
                                                         GeneralFunc.unzipBase64ToImg(
                                                                 String.valueOf(task.getResult().getValue())));
 
-                                                view.findViewById(R.id.pb_profileFrag)
-                                                        .setVisibility(View.GONE);
+                                                progressBar.setVisibility(View.GONE);
                                                 iv_profileFrag_vP_img.setVisibility(View.VISIBLE);
                                             }
                                         });
 
-                                view.findViewById(R.id.pb_profileFrag)
-                                        .setVisibility(View.VISIBLE);
+                                progressBar.setVisibility(View.VISIBLE);
                                 iv_profileFrag_vP_img.setVisibility(View.GONE);
                             } else {
                                 iv_profileFrag_vP_img.setTag(R.id.isZip,true);
@@ -420,72 +451,98 @@ public class profileFrag extends Fragment {
         //Cập nhật lại danh sách ảnh
         OnCompleteListener<DataSnapshot> onCompleteListener =
                 new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.VISIBLE);
-                if(task.isSuccessful()){
-                    ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
-                    for(DataSnapshot childSnapShot : task.getResult().getChildren()){
-                        LinearLayout linearLayout=GeneralFunc.itemPic(view.getContext(),new objectPic(
-                                childSnapShot.getKey(),
-                                String.valueOf(childSnapShot.child("data").getValue()),
-                                String.valueOf(childSnapShot.child("name").getValue()),
-                                String.valueOf(childSnapShot.child("tags").getValue()),
-                                b64Email));
-                        linearLayoutArrayList.add(linearLayout);
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if(task.isSuccessful()){
+                            progressBarProfile.setVisibility(View.VISIBLE);
+
+                            ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
+                            ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
+                            for(DataSnapshot childSnapShot : task.getResult().getChildren()){
+                                dummyList.add(true);
+
+                                int picCount=0;
+
+                                mDB.child(b64Email).child("pics")
+                                        .child(childSnapShot.getKey()).child("data").get().addOnCompleteListener(
+                                                new OnCompleteListener<DataSnapshot>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                                        DataSnapshot dataSnapshot=task.getResult();
+                                                        objectPic pic=new objectPic(
+                                                                childSnapShot.getKey(),
+                                                                String.valueOf(dataSnapshot.getValue()),
+
+                                                                String.valueOf(childSnapShot.child(
+                                                                        "name").getValue()),
+
+                                                                String.valueOf(childSnapShot.child(
+                                                                        "tags").getValue()),
+                                                                b64Email);
+
+                                                        LinearLayout linearLayout=GeneralFunc.itemPic(
+                                                                view.getContext(), pic);
+                                                        linearLayoutArrayList.add(linearLayout);
+
+                                                        if(linearLayoutArrayList.size()==dummyList.size())
+                                                        {
+                                                            ConstraintLayout constraintLayout= view.findViewById(R.id.cl_profileFrag_listPics);
+                                                            constraintLayout.removeAllViews();
+                                                            GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
+                                                                    new View.OnClickListener() {
+                                                                        @Override
+                                                                        public void onClick(View v) {
+                                                                            scrollView.setEnabled(false);
+
+                                                                            ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                                                                    vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                                                                            vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                                                            vpImg.setTag(selectedImg.getTag());
+                                                                            vpImg.setTag(R.id.isZip,true);
+
+                                                                            ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                                                                    ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                                                            ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                                                                    tv_username.getText().toString());
+
+                                                                            objectPic pic=(objectPic)selectedImg.getTag();
+                                                                            if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                                                                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                                                                        "Tên ảnh: "+pic.getName());
+                                                                            }
+                                                                            if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                                                                ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                                                                        "Tags: "+pic.getStrHashtags());
+                                                                            }
+
+                                                                            cl_profile.setVisibility(View.GONE);
+                                                                            cl_vp.setVisibility(View.VISIBLE);
+                                                                            scrollView.setEnabled(true);
+                                                                        }
+                                                                    });
+
+                                                            progressBarProfile.setVisibility(View.GONE);
+                                                        }
+                                                    }
+                                                });
+                                picCount++;
+                                if(picCount==5)break;
+                            }
+
+                        }
                     }
-
-                    ConstraintLayout constraintLayout= view.findViewById(R.id.cl_profileFrag_listPics);
-                    constraintLayout.removeAllViews();
-                    GeneralFunc.items2Layout(constraintLayout, linearLayoutArrayList,
-                            new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
-                                            vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
-                                    vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
-                                    vpImg.setTag(selectedImg.getTag());
-                                    vpImg.setTag(R.id.isZip,true);
-
-                                    ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
-                                            ((BitmapDrawable)userPic.getDrawable()).getBitmap());
-                                    ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
-                                            tv_username.getText().toString());
-
-                                    objectPic pic=(objectPic)selectedImg.getTag();
-                                    if(pic.getName().length()!=0 || pic.getName().equals("null")){
-                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
-                                                "Tên ảnh: "+pic.getName());
-                                    }
-                                    if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
-                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
-                                                "Tags: "+pic.getStrHashtags());
-                                    }
-
-                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_profile)).setVisibility(
-                                            View.GONE);
-                                    ((ConstraintLayout)view.findViewById(R.id.cl_profileFrag_viewPic)).setVisibility(
-                                            View.VISIBLE);
-                                }
-                            });
-                }
-                view.findViewById(R.id.pb_profileFrag_profile).setVisibility(View.GONE);
-            }
-        };
+                };
         mDB.child(b64Email).child("pics").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(onCompleteListener);
-
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
                 //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(onCompleteListener);
+                mDB.child("fast").child(b64Email).child("pics").get()
+                        .addOnCompleteListener(onCompleteListener);
 
             }
 
@@ -493,7 +550,8 @@ public class profileFrag extends Fragment {
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
 
                 //Lấy danh sách ảnh của tài khoản
-                mDB.child(b64Email).child("pics").get().addOnCompleteListener(onCompleteListener);
+                mDB.child("fast").child(b64Email).child("pics").get()
+                        .addOnCompleteListener(onCompleteListener);
 
             }
 
@@ -507,6 +565,135 @@ public class profileFrag extends Fragment {
 
             }
         });
+
+        //Load thêm ảnh cho danh sách
+        scrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                if(scrollY-108 == ((ScrollView)v).getChildAt(0).getMeasuredHeight()-v.getMeasuredHeight()){
+                    ConstraintLayout constraintLayout = view.findViewById(R.id.cl_profileFrag_listPics);
+                    if(constraintLayout.getChildCount()%5!=0){
+                        scrollView.setOnScrollChangeListener(null);
+                        return;
+                    }
+
+                    progressBarProfile.setVisibility(View.VISIBLE);
+                    mDB.child("fast").child(b64Email).child("pics").get().addOnCompleteListener(
+                            new OnCompleteListener<DataSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                    if(task.isSuccessful()){
+                                        ArrayList<LinearLayout> linearLayoutArrayList=new ArrayList<LinearLayout>();
+                                        ArrayList<Boolean> dummyList=new ArrayList<Boolean>();
+                                        ArrayList<String> picKeys=new ArrayList<String>();
+
+                                        //Danh sách key của ảnh đã đc tải trc đó
+                                        int c=constraintLayout.getChildCount();
+
+                                        for (int i=0;i<c;i++) {
+                                            picKeys.add(((objectPic)
+                                                    ((ImageView)
+                                                    ((CardView)
+                                                            ((LinearLayout)constraintLayout.getChildAt(i))
+                                                                    .getChildAt(0))
+                                                            .getChildAt(0))
+                                                            .getTag()).getKey());
+                                        }
+
+                                        int picCount=0;
+
+                                        for(DataSnapshot childSnapShot : task.getResult().getChildren())
+                                        {
+                                            if(picKeys.contains(childSnapShot.getKey()))continue;
+
+                                            dummyList.add(true);
+
+                                            mDB.child(b64Email).child("pics")
+                                                    .child(childSnapShot.getKey()).child("data")
+                                                    .get().addOnCompleteListener(
+                                                            new OnCompleteListener<DataSnapshot>() {
+                                                                @Override
+                                                                public void onComplete(@NonNull
+                                                                                       Task<DataSnapshot>
+                                                                                               task) {
+                                                                    DataSnapshot dataSnapshot=
+                                                                            task.getResult();
+                                                                    objectPic pic=new objectPic(
+                                                                            childSnapShot.getKey(),
+                                                                            String.valueOf(
+                                                                                    dataSnapshot
+                                                                                            .getValue()),
+
+                                                                            String.valueOf(
+                                                                                    childSnapShot.child(
+                                                                                                    "name")
+                                                                                            .getValue()),
+
+                                                                            String.valueOf(
+                                                                                    childSnapShot.child(
+                                                                                                    "tags")
+                                                                                            .getValue()),
+                                                                            b64Email);
+
+                                                                    LinearLayout linearLayout=
+                                                                            GeneralFunc.itemPic(
+                                                                                    view.getContext(), pic);
+                                                                    linearLayoutArrayList.add(linearLayout);
+
+                                                                    if(linearLayoutArrayList.size()
+                                                                            == dummyList.size())
+                                                                    {
+                                                                        GeneralFunc.moreItems2Layout(
+                                                                                constraintLayout,
+                                                                                linearLayoutArrayList,
+                                                                                new View.OnClickListener() {
+                                                                                    @Override
+                                                                                    public void onClick(View v) {
+                                                                                        scrollView.setEnabled(false);
+
+                                                                                        ImageView selectedImg=v.findViewById(R.id.iv_itemPic),
+                                                                                                vpImg = view.findViewById(R.id.iv_profileFrag_vP_img);
+                                                                                        vpImg.setImageBitmap(((BitmapDrawable)selectedImg.getDrawable()).getBitmap());
+                                                                                        vpImg.setTag(selectedImg.getTag());
+                                                                                        vpImg.setTag(R.id.isZip,true);
+
+                                                                                        ((ImageView)view.findViewById(R.id.iv_profileFrag_vP_profilePic)).setImageBitmap(
+                                                                                                ((BitmapDrawable)userPic.getDrawable()).getBitmap());
+                                                                                        ((TextView)view.findViewById(R.id.tv_profileFrag_vP_username)).setText(
+                                                                                                tv_username.getText().toString());
+
+                                                                                        objectPic pic=(objectPic)selectedImg.getTag();
+                                                                                        if(pic.getName().length()!=0 || pic.getName().equals("null")){
+                                                                                            ((TextView)view.findViewById(R.id.tv_profileFrag_vP_namePic)).setText(
+                                                                                                    "Tên ảnh: "+pic.getName());
+                                                                                        }
+                                                                                        if(pic.getTags()[0].length() !=0 || pic.getTags()[0].equals("null")){
+                                                                                            ((TextView)view.findViewById(R.id.tv_profileFrag_vP_tagsPic)).setText(
+                                                                                                    "Tags: "+pic.getStrHashtags());
+                                                                                        }
+
+                                                                                        cl_profile.setVisibility(View.GONE);
+                                                                                        cl_vp.setVisibility(View.VISIBLE);
+                                                                                        scrollView.setEnabled(true);
+                                                                                    }
+                                                                                });
+
+                                                                        progressBarProfile
+                                                                                .setVisibility(View.GONE);
+                                                                    }
+                                                                }
+                                                            });
+
+                                            picCount++;
+                                            if(picCount==5)break;
+                                        }
+                                    }
+                                }
+                            });
+                }
+            }
+        });
+
 
         return view;
     }
