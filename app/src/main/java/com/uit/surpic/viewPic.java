@@ -192,12 +192,12 @@ public class viewPic extends AppCompatActivity {
                     //Nhận item
                     popupMenu.getMenuInflater().inflate(R.menu.view_pic_more_menu,popupMenu.getMenu());
 
-                    String string=binding.bViewPicFollow.getTag().toString();
+                    String string=binding.tvViewPicUsername.getText().toString();
                     boolean isFollowed=!binding.bViewPicFollow.getTag().toString().equals("0");
                     if(!isFollowed){
-                        popupMenu.getMenu().getItem(1).setTitle("Theo dõi "+user.getUsername());
+                        popupMenu.getMenu().getItem(1).setTitle("Theo dõi "+string);
                     } else {
-                        popupMenu.getMenu().getItem(1).setTitle("Bỏ theo dõi "+user.getUsername());
+                        popupMenu.getMenu().getItem(1).setTitle("Bỏ theo dõi "+string);
                     }
                     if((boolean) binding.ivViewPicImg.getTag(R.id.isZip)){
                         popupMenu.getMenu().getItem(0).setTitle("Xem ảnh bản đầy đủ");
