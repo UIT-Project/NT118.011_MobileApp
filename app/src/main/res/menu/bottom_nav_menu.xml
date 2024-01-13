@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/bn_i_home"
+        android:icon="@drawable/baseline_home_24"
+        android:title="Trang chủ"
+        />
+    <item android:id="@+id/bn_i_search"
+        android:icon="@drawable/search_icon"
+        android:title="Tìm kiếm"/>
+    <item android:id="@+id/bn_i_care"
+        android:icon="@drawable/baseline_favorite_white"
+        android:title="Quan tâm"/>
+    <item android:id="@+id/bn_i_profile"
+        android:icon="@drawable/baseline_account_circle_24"
+        android:title="Trang cá nhân"/>
+</menu>

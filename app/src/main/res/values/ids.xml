@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="height0" type="id"/>
+    <item name="height1" type="id"/>
+    <item name="data" type="id"/>
+    <item name="name" type="id"/>
+    <item name="tags" type="id"/>
+    <item name="isZip" type="id"/>
+    <item name="idLast0" type="id"/>
+    <item name="idLast1" type="id"/>
+</resources>

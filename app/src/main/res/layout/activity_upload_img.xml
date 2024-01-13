@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".uploadImg">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/orange_brown"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/cl_uploadImg_top">
+        <Button
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="&lt;"
+            android:textStyle="bold"
+            android:textSize="24dp"
+            android:backgroundTint="@color/orange_brown"
+            android:id="@+id/b_uploadImg_back"/>
+        <TextView
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tải ảnh lên"
+            android:textSize="24dp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/cl_uploadImg_top">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <androidx.cardview.widget.CardView
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:id="@+id/cv_uploadImg"
+                android:layout_marginTop="12dp"
+                >
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:id="@+id/iv_uploadImg"
+                    android:src="@drawable/user"
+                    />
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/cv_uploadImg"
+                app:layout_constraintStart_toStartOf="parent"
+                android:text="Tên ảnh"
+                android:textSize="24dp"
+                android:layout_marginTop="12dp"
+                android:id="@+id/tv_uploadImg_name"
+                />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_uploadImg_name"
+                app:layout_constraintStart_toStartOf="parent"
+                android:textStyle="bold"
+                android:hint="Tên của bức ảnh"
+                android:id="@+id/et_uploadImg_name"
+                android:imeOptions="actionNext"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/et_uploadImg_name"
+                app:layout_constraintStart_toStartOf="parent"
+                android:text="Tags"
+                android:textSize="24dp"
+                android:layout_marginTop="12dp"
+                android:id="@+id/tv_uploadImg_tags"
+                />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_uploadImg_tags"
+                app:layout_constraintStart_toStartOf="parent"
+                android:textStyle="bold"
+                android:hint="Các tag mô tả ảnh"
+                android:id="@+id/et_uploadImg_tags"
+                android:imeOptions="actionGo"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="*Các tag được phải được phân tách bởi khoảng trắng &quot; &quot; và chỉ được chứa các kí tự sau: [a-z], [0-9] và dấu gạch dưới &quot;_&quot;"
+                app:layout_constraintTop_toBottomOf="@id/et_uploadImg_tags"
+                app:layout_constraintStart_toStartOf="parent"
+                android:textSize="18dp"
+                android:textColor="@color/red"
+                android:layout_marginBottom="128dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tải lên"
+                android:backgroundTint="@color/orange_brown"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:textSize="24dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:id="@+id/b_uploadImg_upload"
+                />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".forgotPass">
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/pb_forgotPass"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/cl_act_forgotPass"
+        android:visibility="visible">
+        <TextView
+            android:id="@+id/tv_forgotPass_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Quên mật khẩu"
+            android:textSize="40dp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:textColor="@color/orange_brown"/>
+        <TextView
+            android:id="@+id/tv_forgotPass_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_1"
+            android:text="Quên mật khẩu thì đặt lại thôi!"
+            android:textSize="20dp"
+            android:textAlignment="center"
+            android:textColor="#A4A5B4"
+            />
+        <TextView
+            android:id="@+id/tv_forgotPass_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_2"
+            android:text="Email"
+            android:textSize="25dp"
+            android:textStyle="bold"
+            android:layout_marginTop="25dp"
+            android:layout_marginLeft="20dp"
+            />
+        <EditText
+            android:id="@+id/et_forgotPass_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/tv_forgotPass_email"
+            app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_email"
+            android:layout_marginLeft="20dp"
+            android:hint="Nhập email đã đăng ký"
+            android:imeOptions="actionGo"
+            />
+        <TextView
+            android:id="@+id/tv_forgotPass_err_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/tv_forgotPass_email"
+            app:layout_constraintTop_toBottomOf="@id/et_forgotPass_email"
+            android:layout_marginLeft="20dp"
+            android:textColor="@color/red"/>
+
+
+        <Button
+            android:id="@+id/b_resetPass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_err_email"
+            android:layout_marginTop="50dp"
+            android:text="Đặt lại mật khẩu"
+            android:textSize="25dp"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="@color/orange_brown"
+            />
+        <TextView
+            android:id="@+id/tv_forgotPass_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nhớ lại được mật khẩu/Có mật khẩu mới?"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/b_resetPass"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:textSize="20dp"
+            android:layout_marginLeft="25dp"
+            android:layout_marginTop="50dp"
+            />
+        <TextView
+            android:id="@+id/tv_forgotPass_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đăng nhập"
+            app:layout_constraintStart_toStartOf="@id/tv_forgotPass_3"
+            app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_3"
+            app:layout_constraintEnd_toEndOf="@id/tv_forgotPass_3"
+            android:textSize="20dp"
+            android:layout_marginLeft="10dp"
+            android:textColor="#A04A0F"
+            android:textStyle="bold"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/cl_act_forgotPass_after_first"
+        android:visibility="gone"
+        >
+        <TextView
+            android:id="@+id/tv_forgotPass_af_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Một mail đặt lại mật khẩu đã được gửi đến email của bạn!\n\nXin vui lòng thực hiện đặt lại mật khẩu ở mail đó!"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:textAlignment="center"
+            android:textSize="30dp"
+            android:layout_marginTop="50dp"
+            android:textColor="#A04A0F"
+            android:textStyle="bold"
+            />
+
+        <Button
+            android:id="@+id/b_forgotPass_af_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_forgotPass_af_1"
+            android:layout_marginTop="50dp"
+            android:text="Quay Về Đăng Nhập"
+            android:textSize="25dp"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#A04A0F"
+            />
+        <TextView
+            android:id="@+id/tv_forgotPass_af_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Không nhận được mail?"
+            app:layout_constraintStart_toStartOf="@id/b_forgotPass_af_login"
+            app:layout_constraintTop_toBottomOf="@id/b_forgotPass_af_login"
+            android:textSize="20dp"
+            android:layout_marginTop="20dp"
+            />
+        <TextView
+            android:id="@+id/tv_forgotPass_af_resend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gửi lại"
+            app:layout_constraintStart_toEndOf="@id/tv_forgotPass_af_2"
+            app:layout_constraintTop_toBottomOf="@id/b_forgotPass_af_login"
+            android:textSize="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="20dp"
+            android:textColor="@color/orange_brown"
+            android:textStyle="bold"
+            />
+        <TextView
+            android:id="@+id/tv_forgotPass_af_resend_cd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@id/tv_forgotPass_af_resend"
+            app:layout_constraintTop_toBottomOf="@id/b_forgotPass_af_login"
+            android:textSize="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="20dp"
+            android:textStyle="bold"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
