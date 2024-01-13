@@ -83,6 +83,13 @@ public class updateImg extends AppCompatActivity {
                     databaseReference.child("tags").setValue(
                             binding.etUpdateImgTags.getText().toString().trim());
 
+                    databaseReference = mDB.child("fast").child(b64Email).child("pics")
+                            .child(pic.getKey());
+                    databaseReference.child("name").setValue(
+                            binding.etUpdateImgName.getText().toString().trim());
+                    databaseReference.child("tags").setValue(
+                            binding.etUpdateImgTags.getText().toString().trim());
+
                     finish();
                 }
             });
